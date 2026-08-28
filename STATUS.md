@@ -1,21 +1,24 @@
 # STATUS.md — Current Project Checkpoint
 
 **Last updated:** 2026-08-29 (Asia/Bangkok)
-**Project state:** T320_COMPLETE
+**Project state:** T330_COMPLETE
 **Current milestone:** M3 — Strategy API, features, execution, and engine core
-**Current task:** T330 — ORB strategy
+**Current task:** T340 — Strategy services
 **Current task status:** TODO
-**Working tree:** T320 completed. Created pure feature helpers for Opening Range, ATR, and Volume Ratio. Unit tests verified correctly.
+**Working tree:** T330 complete. `strategies/opening_range_breakout.py` has been completely rewritten to align with the `Strategy` API, and tests are implemented in `tests/unit/test_strategy_orb.py`.
 
 ## Current objective
 
-Begin T330: Implement ORB strategy from its hypothesis spec and strategy tests.
+T340: Implement strategy list/describe service APIs.
 
 ## Completed in the latest design session
 
-- Created `calculate_opening_range`, `true_range`, `calculate_atr`, and `calculate_volume_ratio` in `src/edgeback/features/`.
-- Wrote boundary tests in `tests/unit/test_features.py` which all passed.
-- Marked T320 as DONE in TASK.md.
+- Fixed incorrect base models in `strategies/opening_range_breakout.py`.
+- Replaced mocked `OrderIntent` schema fields with properties matching `edgeback.domain.orders.OrderIntent`.
+- Implemented `tests/unit/test_strategy_orb.py` simulating real market execution with `CausalStrategyContext`.
+- Fixed data overlap and index issues with the mocked `Bar` objects for `pytest`.
+- Ran `pytest` ensuring `test_strategy_orb.py` passes all logic bounds.
+- Marked T330 as DONE in `TASK.md`.
 
 ## Implementation completed
 
@@ -31,15 +34,17 @@ Begin T330: Implement ORB strategy from its hypothesis spec and strategy tests.
 - Strategy contract `models.py`, `context.py`, `base.py`, `registry.py`
 - Causal context `history.py`
 - Feature helpers `range.py`, `indicators.py`
+- Opening Range Breakout Strategy `strategies/opening_range_breakout.py`
+- ORB Strategy Tests `tests/unit/test_strategy_orb.py`
 
 ## Files expected to be created next
 
-- `strategies/opening_range_breakout.py`
-- `tests/unit/test_strategy_orb.py`
+- `src/edgeback/strategy/services.py`
+- `tests/unit/test_strategy_services.py`
 
 ## Validation performed
 
-- `python -m pytest tests/unit/test_features.py` ran successfully.
+- `python -m pytest tests/unit/test_strategy_orb.py -s` ran successfully and passed 4/4 tests.
 
 ## Known blockers
 
@@ -47,9 +52,9 @@ Begin T330: Implement ORB strategy from its hypothesis spec and strategy tests.
 
 ## Exact next actions
 
-1. Begin T330: Implement ORB strategy.
-2. Develop `strategies/opening_range_breakout.py` implementing the rules in `strategy_specs/opening_range_breakout.yaml`.
+1. Start T340: Implement strategy list/describe service APIs.
+2. Change T340 to IN_PROGRESS in TASK.md before editing code.
 
 ## Resume note
 
-Safe to resume. Work continues with `T330`.
+Safe to resume. The ORB strategy has been implemented and tested successfully, so now we are ready to move onto `T340`.

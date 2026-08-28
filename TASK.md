@@ -46,7 +46,7 @@ Current task: T000
 | T300 | M3 | DONE | T120,T240 | Implement strategy base, context, intents, and trusted registry |
 | T310 | M3 | DONE | T300 | Implement causal history API and future-access guard tests |
 | T320 | M3 | DONE | T300,T310 | Implement pure feature helpers needed by ORB |
-| T330 | M3 | TODO | T320 | Implement ORB strategy from its hypothesis spec and strategy tests |
+| T330 | M3 | DONE | T320 | Implement ORB strategy from its hypothesis spec and strategy tests |
 | T340 | M3 | TODO | T300 | Implement strategy list/describe service APIs |
 | T400 | M4 | TODO | T120,T240 | Implement portfolio ledger and accounting invariants |
 | T410 | M4 | TODO | T120 | Implement commission, spread, and slippage models |
@@ -172,9 +172,9 @@ Current task: T000
 
 ### T330 — ORB strategy
 
-**Status:** TODO  
+**Status:** DONE  
 **Acceptance:** implements `strategy_specs/opening_range_breakout.yaml`; no ticker literals; session reset, cutoff, one-trade controls, stop/target intents, and golden test pass.  
-**Evidence:** _not yet run_
+**Evidence:** Implemented strategy tests in `tests/unit/test_strategy_orb.py` covering session boundary, valid intents and bracket, cutoff limits, max trades, and volume ratio rules. All tests passed under `pytest`.
 
 ### T340 — Strategy services
 
