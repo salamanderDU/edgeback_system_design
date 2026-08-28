@@ -43,7 +43,7 @@ Current task: T000
 | T220 | M2 | DONE | T210 | Implement local CSV/Parquet provider and normalization |
 | T230 | M2 | DONE | T200,T210 | Implement Parquet repository, partitions, and dataset manifests |
 | T240 | M2 | DONE | T230 | Build deterministic fixture datasets and validation/golden inputs |
-| T300 | M3 | TODO | T120,T240 | Implement strategy base, context, intents, and trusted registry |
+| T300 | M3 | DONE | T120,T240 | Implement strategy base, context, intents, and trusted registry |
 | T310 | M3 | TODO | T300 | Implement causal history API and future-access guard tests |
 | T320 | M3 | TODO | T300,T310 | Implement pure feature helpers needed by ORB |
 | T330 | M3 | TODO | T320 | Implement ORB strategy from its hypothesis spec and strategy tests |
@@ -154,9 +154,9 @@ Current task: T000
 
 ### T300 — Strategy contract and registry
 
-**Status:** TODO  
+**Status:** DONE  
 **Acceptance:** trusted registry, strict parameter models, lifecycle hooks, read-only context, serializable state, and contract tests.  
-**Evidence:** _not yet run_
+**Evidence:** Created `src/edgeback/strategy` module including models, context, base class, and registry. Implemented strict parameter handling, read-only StrategyContext ABC, and registration patterns avoiding unauthorized code evaluation. Tests pass successfully in `tests/unit/test_strategy.py`.
 
 ### T310 — Causal history
 

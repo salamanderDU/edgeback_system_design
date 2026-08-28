@@ -47,3 +47,14 @@ class Order(BaseStrictModel):
 
     status: Literal["pending", "open", "filled", "cancelled", "rejected"] = "pending"
     reason: str = ""
+
+
+class OrderEvent(BaseStrictModel):
+    """
+    An event representing a change in an Order's state (e.g. filled, cancelled, rejected).
+    """
+
+    order: Order
+    event_type: Literal["submitted", "accepted", "filled", "partial_fill", "cancelled", "rejected"]
+    timestamp_utc: str | None = None
+    reason: str = ""
