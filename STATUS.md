@@ -1,22 +1,21 @@
 # STATUS.md — Current Project Checkpoint
 
 **Last updated:** 2026-08-29 (Asia/Bangkok)
-**Project state:** T310_COMPLETE
+**Project state:** T320_COMPLETE
 **Current milestone:** M3 — Strategy API, features, execution, and engine core
-**Current task:** T320 — Implement pure feature helpers
+**Current task:** T330 — ORB strategy
 **Current task status:** TODO
-**Working tree:** T310 completed. Causal history context successfully guards against future bars and mutated state.
+**Working tree:** T320 completed. Created pure feature helpers for Opening Range, ATR, and Volume Ratio. Unit tests verified correctly.
 
 ## Current objective
 
-Begin T320: Implement pure feature helpers needed by ORB (Opening Range Breakout).
+Begin T330: Implement ORB strategy from its hypothesis spec and strategy tests.
 
 ## Completed in the latest design session
 
-- Created `CausalStrategyContext` in `src/edgeback/strategy/history.py`.
-- Wrote test cases in `tests/unit/test_history.py` to ensure only past/current bars are returned.
-- Ensured mutation of history returns does not affect context memory and underlying Pydantic models are frozen.
-- Marked T310 as DONE in TASK.md.
+- Created `calculate_opening_range`, `true_range`, `calculate_atr`, and `calculate_volume_ratio` in `src/edgeback/features/`.
+- Wrote boundary tests in `tests/unit/test_features.py` which all passed.
+- Marked T320 as DONE in TASK.md.
 
 ## Implementation completed
 
@@ -31,17 +30,16 @@ Begin T320: Implement pure feature helpers needed by ORB (Opening Range Breakout
 - Core Data Fixtures `synthetic.py`, `test_fixtures.py`
 - Strategy contract `models.py`, `context.py`, `base.py`, `registry.py`
 - Causal context `history.py`
+- Feature helpers `range.py`, `indicators.py`
 
 ## Files expected to be created next
 
-- `src/edgeback/features/` (directory for pure indicator helpers)
-- `src/edgeback/features/range.py` (or similar)
-- `tests/unit/test_features.py`
+- `strategies/opening_range_breakout.py`
+- `tests/unit/test_strategy_orb.py`
 
 ## Validation performed
 
-- `python -m pytest tests/unit/test_history.py` ran successfully.
-- Verified domain model behavior with strictly frozen schemas.
+- `python -m pytest tests/unit/test_features.py` ran successfully.
 
 ## Known blockers
 
@@ -49,9 +47,9 @@ Begin T320: Implement pure feature helpers needed by ORB (Opening Range Breakout
 
 ## Exact next actions
 
-1. Begin T320: Implement pure feature helpers.
-2. Develop pure feature functions/classes for Opening Range calculation, ATR/true range, and session VWAP required by the ORB strategy.
+1. Begin T330: Implement ORB strategy.
+2. Develop `strategies/opening_range_breakout.py` implementing the rules in `strategy_specs/opening_range_breakout.yaml`.
 
 ## Resume note
 
-Safe to resume. Work continues with `T320`.
+Safe to resume. Work continues with `T330`.

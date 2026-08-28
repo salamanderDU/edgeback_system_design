@@ -45,7 +45,7 @@ Current task: T000
 | T240 | M2 | DONE | T230 | Build deterministic fixture datasets and validation/golden inputs |
 | T300 | M3 | DONE | T120,T240 | Implement strategy base, context, intents, and trusted registry |
 | T310 | M3 | DONE | T300 | Implement causal history API and future-access guard tests |
-| T320 | M3 | TODO | T300,T310 | Implement pure feature helpers needed by ORB |
+| T320 | M3 | DONE | T300,T310 | Implement pure feature helpers needed by ORB |
 | T330 | M3 | TODO | T320 | Implement ORB strategy from its hypothesis spec and strategy tests |
 | T340 | M3 | TODO | T300 | Implement strategy list/describe service APIs |
 | T400 | M4 | TODO | T120,T240 | Implement portfolio ledger and accounting invariants |
@@ -166,9 +166,9 @@ Current task: T000
 
 ### T320 — Feature helpers
 
-**Status:** TODO  
+**Status:** DONE  
 **Acceptance:** causal opening range, ATR/true range, session VWAP or volume ratio helpers needed by ORB; boundary tests.  
-**Evidence:** _not yet run_
+**Evidence:** Created `src/edgeback/features/range.py` for Opening Range and `src/edgeback/features/indicators.py` for ATR and Volume Ratio. Added tests in `tests/unit/test_features.py` which pass correctly.
 
 ### T330 — ORB strategy
 
