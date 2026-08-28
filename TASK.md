@@ -44,7 +44,7 @@ Current task: T000
 | T230 | M2 | DONE | T200,T210 | Implement Parquet repository, partitions, and dataset manifests |
 | T240 | M2 | DONE | T230 | Build deterministic fixture datasets and validation/golden inputs |
 | T300 | M3 | DONE | T120,T240 | Implement strategy base, context, intents, and trusted registry |
-| T310 | M3 | TODO | T300 | Implement causal history API and future-access guard tests |
+| T310 | M3 | DONE | T300 | Implement causal history API and future-access guard tests |
 | T320 | M3 | TODO | T300,T310 | Implement pure feature helpers needed by ORB |
 | T330 | M3 | TODO | T320 | Implement ORB strategy from its hypothesis spec and strategy tests |
 | T340 | M3 | TODO | T300 | Implement strategy list/describe service APIs |
@@ -160,9 +160,9 @@ Current task: T000
 
 ### T310 — Causal history
 
-**Status:** TODO  
+**Status:** DONE  
 **Acceptance:** context cannot return data after engine time; future mutation sentinel passes.  
-**Evidence:** _not yet run_
+**Evidence:** Created `src/edgeback/strategy/history.py` providing `CausalStrategyContext` that returns only bars ending on or before `engine_time_utc`. Attempted bar mutations raise Pydantic `ValidationError`. List mutations do not affect underlying context state. Tested via `tests/unit/test_history.py` which passes `pytest`.
 
 ### T320 — Feature helpers
 

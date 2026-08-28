@@ -1,25 +1,22 @@
 # STATUS.md — Current Project Checkpoint
 
 **Last updated:** 2026-08-29 (Asia/Bangkok)
-**Project state:** T300_COMPLETE
+**Project state:** T310_COMPLETE
 **Current milestone:** M3 — Strategy API, features, execution, and engine core
-**Current task:** T310 — Implement causal history API and future-access guard tests
+**Current task:** T320 — Implement pure feature helpers
 **Current task status:** TODO
-**Working tree:** T300 completed with domain models, context, base class, and registry. Tests pass.
+**Working tree:** T310 completed. Causal history context successfully guards against future bars and mutated state.
 
 ## Current objective
 
-Begin T310: Implement causal history API and future-access guard tests to ensure strategies cannot peek at future data.
+Begin T320: Implement pure feature helpers needed by ORB (Opening Range Breakout).
 
 ## Completed in the latest design session
 
-- Created `OrderEvent` model in `src/edgeback/domain/orders.py`.
-- Created `StrategyMetadata` in `src/edgeback/strategy/models.py`.
-- Defined `StrategyContext` ABC in `src/edgeback/strategy/context.py`.
-- Created `Strategy` base class in `src/edgeback/strategy/base.py`.
-- Implemented `register_strategy`, `get_strategy_class` in `src/edgeback/strategy/registry.py`.
-- Added unit tests in `tests/unit/test_strategy.py` which pass correctly.
-- Marked T300 as DONE in TASK.md.
+- Created `CausalStrategyContext` in `src/edgeback/strategy/history.py`.
+- Wrote test cases in `tests/unit/test_history.py` to ensure only past/current bars are returned.
+- Ensured mutation of history returns does not affect context memory and underlying Pydantic models are frozen.
+- Marked T310 as DONE in TASK.md.
 
 ## Implementation completed
 
@@ -33,15 +30,18 @@ Begin T310: Implement causal history API and future-access guard tests to ensure
 - Repository interactions `manifest.py`, `repository.py`
 - Core Data Fixtures `synthetic.py`, `test_fixtures.py`
 - Strategy contract `models.py`, `context.py`, `base.py`, `registry.py`
+- Causal context `history.py`
 
 ## Files expected to be created next
 
-- `src/edgeback/strategy/history.py` (or similar for context implementation)
-- `tests/unit/test_history.py`
+- `src/edgeback/features/` (directory for pure indicator helpers)
+- `src/edgeback/features/range.py` (or similar)
+- `tests/unit/test_features.py`
 
 ## Validation performed
 
-- `pytest tests/unit/test_strategy.py` ran successfully.
+- `python -m pytest tests/unit/test_history.py` ran successfully.
+- Verified domain model behavior with strictly frozen schemas.
 
 ## Known blockers
 
@@ -49,9 +49,9 @@ Begin T310: Implement causal history API and future-access guard tests to ensure
 
 ## Exact next actions
 
-1. Begin T310: Implement causal history API and future-access guard tests.
-2. Develop a concrete implementation of `StrategyContext` that wraps data and enforces time boundaries.
+1. Begin T320: Implement pure feature helpers.
+2. Develop pure feature functions/classes for Opening Range calculation, ATR/true range, and session VWAP required by the ORB strategy.
 
 ## Resume note
 
-Safe to resume. Work continues with `T310`.
+Safe to resume. Work continues with `T320`.
