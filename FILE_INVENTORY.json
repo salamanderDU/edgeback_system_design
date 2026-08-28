@@ -1,0 +1,137 @@
+[
+  {
+    "path": ".env.example",
+    "bytes": 187,
+    "lines": 4
+  },
+  {
+    "path": "AGENTS.md",
+    "bytes": 5939,
+    "lines": 107
+  },
+  {
+    "path": "AI_CLI_PROMPT.txt",
+    "bytes": 1814,
+    "lines": 27
+  },
+  {
+    "path": "DECISIONS.md",
+    "bytes": 4891,
+    "lines": 106
+  },
+  {
+    "path": "EDGE_BACK_SYSTEM_DESIGN_COMBINED.md",
+    "bytes": 115432,
+    "lines": 2964
+  },
+  {
+    "path": "PROJECT_MANIFEST.yaml",
+    "bytes": 2724,
+    "lines": 80
+  },
+  {
+    "path": "README.md",
+    "bytes": 6470,
+    "lines": 74
+  },
+  {
+    "path": "STATUS.md",
+    "bytes": 2652,
+    "lines": 65
+  },
+  {
+    "path": "TASK.md",
+    "bytes": 14756,
+    "lines": 339
+  },
+  {
+    "path": "configs/example_backtest.yaml",
+    "bytes": 2341,
+    "lines": 96
+  },
+  {
+    "path": "configs/example_sweep.yaml",
+    "bytes": 1433,
+    "lines": 50
+  },
+  {
+    "path": "docs/01_PRODUCT_REQUIREMENTS.md",
+    "bytes": 9157,
+    "lines": 197
+  },
+  {
+    "path": "docs/02_ARCHITECTURE.md",
+    "bytes": 9574,
+    "lines": 252
+  },
+  {
+    "path": "docs/03_DATA_LAYER.md",
+    "bytes": 8388,
+    "lines": 192
+  },
+  {
+    "path": "docs/04_BACKTEST_ENGINE.md",
+    "bytes": 8730,
+    "lines": 252
+  },
+  {
+    "path": "docs/05_STRATEGY_PLUGIN_SPEC.md",
+    "bytes": 6786,
+    "lines": 190
+  },
+  {
+    "path": "docs/06_EDGE_RESEARCH_PROTOCOL.md",
+    "bytes": 6655,
+    "lines": 173
+  },
+  {
+    "path": "docs/07_CLI_CONFIG_AND_ARTIFACTS.md",
+    "bytes": 6387,
+    "lines": 222
+  },
+  {
+    "path": "docs/08_TESTING_AND_ACCEPTANCE.md",
+    "bytes": 5476,
+    "lines": 162
+  },
+  {
+    "path": "docs/09_FREE_DATA_SOURCES.md",
+    "bytes": 4613,
+    "lines": 72
+  },
+  {
+    "path": "schemas/bar.schema.json",
+    "bytes": 2145,
+    "lines": 116
+  },
+  {
+    "path": "schemas/run_metadata.schema.json",
+    "bytes": 2908,
+    "lines": 164
+  },
+  {
+    "path": "strategy_specs/README.md",
+    "bytes": 816,
+    "lines": 26
+  },
+  {
+    "path": "strategy_specs/gap_momentum.yaml",
+    "bytes": 2270,
+    "lines": 55
+  },
+  {
+    "path": "strategy_specs/opening_range_breakout.yaml",
+    "bytes": 4646,
+    "lines": 153
+  },
+  {
+    "path": "strategy_specs/vwap_mean_reversion.yaml",
+    "bytes": 2267,
+    "lines": 57
+  },
+  {
+    "path": "templates/gitignore.template",
+    "bytes": 286,
+    "lines": 30
+  }
+]

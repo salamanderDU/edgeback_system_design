@@ -1,0 +1,80 @@
+manifest_version: '1.0'
+project:
+  name: EdgeBack
+  repository_name: edgeback
+  package_name: edgeback
+  cli_command: edgeback
+  type: config_driven_intraday_backtesting_and_edge_research
+  language: Python
+  target_python: '3.12'
+  initial_market_scope: US equities and ETFs
+  implementation_status: DESIGN_COMPLETE_IMPLEMENTATION_NOT_STARTED
+  design_verified_on: '2026-08-21'
+mission: Build a deterministic, event-driven intraday backtesting system in which symbols are selected
+  through configuration and each strategy is isolated in its own Python module. The system must support
+  free-data adapters first, realistic execution costs, reproducible experiments, and context-safe AI CLI
+  handoffs through TASK.md and STATUS.md.
+read_order:
+- AGENTS.md
+- README.md
+- docs/01_PRODUCT_REQUIREMENTS.md
+- docs/02_ARCHITECTURE.md
+- docs/03_DATA_LAYER.md
+- docs/04_BACKTEST_ENGINE.md
+- docs/05_STRATEGY_PLUGIN_SPEC.md
+- docs/06_EDGE_RESEARCH_PROTOCOL.md
+- docs/07_CLI_CONFIG_AND_ARTIFACTS.md
+- docs/08_TESTING_AND_ACCEPTANCE.md
+- docs/09_FREE_DATA_SOURCES.md
+- strategy_specs/README.md
+- strategy_specs/opening_range_breakout.yaml
+- strategy_specs/vwap_mean_reversion.yaml
+- strategy_specs/gap_momentum.yaml
+- configs/example_backtest.yaml
+- configs/example_sweep.yaml
+- schemas/bar.schema.json
+- schemas/run_metadata.schema.json
+- .env.example
+- templates/gitignore.template
+- TASK.md
+- STATUS.md
+- DECISIONS.md
+state_files:
+  durable_backlog: TASK.md
+  current_checkpoint: STATUS.md
+  architecture_decisions: DECISIONS.md
+source_of_truth_precedence:
+- AGENTS.md
+- docs/01_PRODUCT_REQUIREMENTS.md
+- docs/02_ARCHITECTURE.md
+- remaining numbered design documents
+- DECISIONS.md
+- TASK.md
+- STATUS.md
+- code comments
+implementation_baseline:
+  dependency_manifest: pyproject.toml
+  src_layout: true
+  configuration: YAML validated by Pydantic
+  dataframe_engine: pandas for MVP
+  bar_storage: Parquet
+  run_registry: SQLite plus per-run immutable artifacts
+  cli: Typer
+  tests: pytest
+  quality: Ruff plus static type checking
+  default_data_provider: yfinance
+  optional_free_provider: alpaca_iex
+  default_interval: 5m
+  default_session: regular
+  default_exchange_timezone: America/New_York
+  default_fill_timing: next_bar_open
+  default_same_bar_bracket_policy: stop_first
+  force_flat_at_session_end: true
+forbidden_shortcuts:
+- hard-coded ticker symbols inside core engine or strategy logic
+- same-bar fills for signals created from that bar close
+- silent forward filling of missing OHLCV bars
+- silent mixing of providers or feeds in one dataset
+- network calls during a backtest unless explicitly enabled
+- unsafe YAML loading or eval-based configuration
+- claiming a strategy has an edge from in-sample results alone

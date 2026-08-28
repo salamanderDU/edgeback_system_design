@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Runtime market data and outputs
+data/
+runs/
+*.sqlite3
+*.db
+
+# Provider payloads/logs
+*.log
+
+# Editors/OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Operational
+data/
+runs/
+*.db
+*.sqlite3
+
+# Env
+.env
+
+# Providers
+provider_payloads/

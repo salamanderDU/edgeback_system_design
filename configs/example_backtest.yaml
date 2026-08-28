@@ -1,0 +1,96 @@
+config_version: "1.0"
+
+project:
+  name: "orb_recent_research"
+  tags: ["intraday", "hypothesis", "free-data"]
+  notes: "Example only; not a trading recommendation."
+  random_seed: 42
+
+market:
+  calendar: "XNYS"
+  timezone: "America/New_York"
+  session: "regular"
+  include_extended_hours: false
+
+# Provider is explicit. A backtest uses already-downloaded canonical data.
+data:
+  provider: "yfinance"
+  feed: "yahoo"
+  symbols: ["NVDA"]
+  interval: "5m"
+  date_range:
+    mode: "rolling"
+    lookback_calendar_days: 55
+    end: null
+  adjustment_mode: "split_adjusted"
+  cache_dir: "data"
+  minimum_session_completeness_pct: 98.0
+  missing_session_policy: "fail_session"
+  allow_incomplete_latest_bar: false
+
+engine:
+  initial_cash_usd: 100000.0
+  signal_time: "bar_close"
+  market_fill_timing: "next_bar_open"
+  same_bar_bracket_policy: "stop_first"
+  force_flat_at_session_end: true
+  entry_allocation: "priority_then_symbol"
+  fractional_shares: false
+  max_leverage: 1.0
+
+execution:
+  spread:
+    model: "fixed_bps"
+    full_spread_bps: 2.0
+  slippage:
+    model: "fixed_bps"
+    bps_per_side: 1.0
+  commission:
+    model: "per_share"
+    usd_per_share: 0.005
+    minimum_usd_per_order: 0.0
+  volume_participation:
+    max_pct_of_bar_volume: 1.0
+    on_exceed: "reject"
+
+risk:
+  direction: "both"
+  sizing:
+    model: "risk_per_trade"
+    risk_per_trade_pct_of_equity: 0.25
+  max_position_pct_of_equity: 25.0
+  max_gross_exposure_pct: 100.0
+  max_concurrent_positions: 3
+  max_trades_per_session: 4
+  max_daily_loss_pct_of_starting_equity: 1.0
+  max_consecutive_losses: 3
+  entry_start_time: "09:45"
+  latest_entry_time: "14:30"
+  cooldown_bars_after_exit: 1
+
+strategy:
+  name: "opening_range_breakout"
+  expected_version: "0.1.0"
+  params:
+    opening_range_minutes: 15
+    directions: "both"
+    breakout_buffer_bps: 5.0
+    minimum_opening_range_pct: 0.20
+    maximum_opening_range_pct: 2.50
+    volume_ratio_lookback_bars: 20
+    minimum_volume_ratio: 1.20
+    stop_model: "opposite_range_or_atr"
+    atr_period: 14
+    stop_atr_multiple: 0.80
+    reward_risk: 1.50
+    max_trades_per_symbol_session: 1
+    close_if_not_triggered_by: "14:30"
+
+report:
+  output_dir: "runs"
+  html: true
+  write_csv_copies: false
+  include_trade_feature_snapshots: true
+  include_mae_mfe: true
+  bootstrap_samples: 1000
+  conclusion_gates_enabled: true

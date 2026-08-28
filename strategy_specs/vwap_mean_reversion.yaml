@@ -1,0 +1,57 @@
+spec_version: "1.0"
+id: "vwap_mean_reversion"
+version: "0.1.0"
+research_status: "hypothesis"
+name: "Session VWAP Mean Reversion"
+
+scope:
+  markets: ["US_EQUITY", "US_ETF"]
+  timeframes: ["1m", "5m"]
+  directions: ["long", "short"]
+  session: "regular"
+
+hypothesis: >-
+  After initial price discovery, a liquid instrument that moves unusually far
+  from session VWAP without a strong directional regime may revert toward VWAP
+  before the close.
+
+falsification:
+  - "Out-of-sample mean-reversion trades remain negative after costs."
+  - "Results require an isolated deviation threshold."
+  - "Losses concentrate on trend days and the predeclared trend filter does not control them."
+
+required_data:
+  fields: ["high", "low", "close", "volume"]
+  previous_sessions: 1
+  warmup_bars: 30
+  extended_hours_required: false
+
+parameters:
+  earliest_entry_time: {type: "local_time", default: "10:00"}
+  latest_entry_time: {type: "local_time", default: "15:00"}
+  deviation_atr_multiple: {type: "float", default: 1.25, minimum: 0.25, maximum: 5.0}
+  atr_period: {type: "int", default: 14, minimum: 2, maximum: 100}
+  maximum_vwap_slope_bps_per_bar: {type: "float", default: 8.0, minimum: 0.0, maximum: 100.0}
+  stop_atr_multiple: {type: "float", default: 1.0, minimum: 0.1, maximum: 5.0}
+  target: {type: "enum", values: ["vwap", "partial_vwap"], default: "vwap"}
+  max_trades_per_symbol_session: {type: "int", default: 2, minimum: 1, maximum: 10}
+
+rules:
+  - "Compute session VWAP causally and reset at regular-session open."
+  - "Do not enter during the opening exclusion window or after latest entry."
+  - "Long when close is sufficiently below VWAP and absolute causal VWAP slope is below the maximum."
+  - "Short symmetrically above VWAP."
+  - "Target VWAP or configured fraction toward VWAP."
+  - "Stop uses ATR beyond the entry reference."
+  - "Emit next-bar orders and close by session end."
+
+invariants:
+  - "VWAP uses only current and prior regular-session bars."
+  - "No hard-coded symbol."
+  - "No entry outside time window."
+  - "No future normalization."
+
+known_limitations:
+  - "Trend-regime proxy is simple and may not generalize."
+  - "Provider volume coverage materially affects VWAP."
+  - "Quote spread widens during volatile moves but is synthetic in MVP."

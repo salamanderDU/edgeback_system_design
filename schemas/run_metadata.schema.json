@@ -1,0 +1,164 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://edgeback.local/schemas/run_metadata.schema.json",
+  "title": "EdgeBack Run Metadata",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema_version",
+    "run_id",
+    "status",
+    "created_at_utc",
+    "strategy",
+    "config_hash",
+    "data_manifest_hash",
+    "random_seed",
+    "artifacts"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 8
+    },
+    "research_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "trial_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "parent_run_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "status": {
+      "enum": [
+        "CREATED",
+        "RUNNING",
+        "COMPLETED",
+        "FAILED"
+      ]
+    },
+    "created_at_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_at_utc": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "strategy": {
+      "type": "object",
+      "required": [
+        "id",
+        "version",
+        "parameters_hash"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "parameters_hash": {
+          "type": "string"
+        }
+      }
+    },
+    "config_hash": {
+      "type": "string"
+    },
+    "data_manifest_hash": {
+      "type": "string"
+    },
+    "git_commit": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "git_dirty": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "python_version": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "dependency_snapshot_hash": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "random_seed": {
+      "type": "integer"
+    },
+    "execution_models": {
+      "type": "object"
+    },
+    "conclusion_label": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        null,
+        "ENGINE_VALIDATION_ONLY",
+        "INSUFFICIENT_EVIDENCE",
+        "IN_SAMPLE_ONLY",
+        "OOS_FAILED",
+        "OOS_PROMISING_NOT_ROBUST",
+        "ROBUST_ON_TESTED_DATA"
+      ]
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "media_type": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

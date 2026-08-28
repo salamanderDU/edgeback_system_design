@@ -1,0 +1,55 @@
+spec_version: "1.0"
+id: "gap_momentum"
+version: "0.1.0"
+research_status: "hypothesis"
+name: "Gap Direction Momentum"
+
+scope:
+  markets: ["US_EQUITY", "US_ETF"]
+  timeframes: ["1m", "5m", "15m"]
+  directions: ["long", "short"]
+  session: "regular"
+
+hypothesis: >-
+  A sufficiently large opening gap followed by early confirmation in the same
+  direction may continue intraday because overnight information is incorporated
+  progressively rather than instantly.
+
+falsification:
+  - "Continuation expectancy is not positive out of sample after costs."
+  - "Performance is explained only by a few extreme news sessions."
+  - "The effect disappears after delaying entry by one bar."
+
+required_data:
+  fields: ["open", "high", "low", "close", "volume"]
+  previous_sessions: 2
+  warmup_bars: 20
+  derived: ["previous_regular_session_close"]
+
+parameters:
+  minimum_gap_pct: {type: "float", default: 1.0, minimum: 0.1, maximum: 20.0}
+  maximum_gap_pct: {type: "float", default: 8.0, minimum: 0.5, maximum: 50.0}
+  confirmation_minutes: {type: "int", default: 15, minimum: 5, maximum: 60}
+  confirmation_breakout_buffer_bps: {type: "float", default: 5.0, minimum: 0.0, maximum: 100.0}
+  minimum_volume_ratio: {type: "float", default: 1.2, minimum: 0.0, maximum: 10.0}
+  stop_atr_multiple: {type: "float", default: 1.0, minimum: 0.1, maximum: 5.0}
+  reward_risk: {type: "float", default: 1.5, minimum: 0.25, maximum: 10.0}
+  latest_entry_time: {type: "local_time", default: "11:30"}
+
+rules:
+  - "Gap is regular-session open versus previous regular-session close."
+  - "Reject gaps outside configured bounds."
+  - "Build an early confirmation range."
+  - "For a gap up, enter long only after a completed-bar close confirms above the range plus buffer and volume filter."
+  - "For a gap down, use symmetric short confirmation."
+  - "Use ATR stop, reward/risk target, next-bar execution, and forced close."
+
+invariants:
+  - "Previous close is known before current session opens."
+  - "No use of post-close/future information."
+  - "No hard-coded symbol."
+
+known_limitations:
+  - "No news classification; extreme-event concentration must be reported."
+  - "Free data may omit delisted historical gap candidates, creating survivorship bias."
+  - "Short borrow availability is unknown."

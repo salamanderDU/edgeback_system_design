@@ -1,0 +1,50 @@
+config_version: "1.0"
+
+research:
+  name: "orb_parameter_stability"
+  base_config: "configs/example_backtest.yaml"
+  random_seed: 42
+  mode: "grid"
+  max_trials: 200
+  split:
+    method: "chronological_sessions"
+    train_pct: 60.0
+    validation_pct: 20.0
+    test_pct: 20.0
+    embargo_sessions: 1
+    final_test_immutable: true
+  selection:
+    primary_metric: "validation_expectancy_usd_per_trade"
+    tie_breakers:
+      - "validation_max_drawdown_pct"
+      - "validation_profit_factor"
+    constraints:
+      minimum_validation_trades: 30
+      maximum_validation_drawdown_pct: 10.0
+      minimum_validation_profit_factor: 1.0
+  parameter_grid:
+    opening_range_minutes: [10, 15, 30]
+    breakout_buffer_bps: [0.0, 5.0, 10.0]
+    minimum_volume_ratio: [1.0, 1.2, 1.5]
+    stop_atr_multiple: [0.6, 0.8, 1.0]
+    reward_risk: [1.0, 1.5, 2.0]
+  walk_forward:
+    enabled: true
+    method: "rolling"
+    train_sessions: 120
+    validation_sessions: 20
+    test_sessions: 20
+    step_sessions: 20
+  stress:
+    cost_multipliers: [1.0, 2.0, 3.0]
+    additional_entry_delay_bars: [0, 1]
+    remove_best_trade: true
+    remove_best_session: true
+    parameter_neighborhood: true
+    bootstrap_sessions: 2000
+  gates:
+    minimum_oos_trades: 100
+    maximum_single_trade_profit_contribution_pct: 20.0
+    maximum_single_session_profit_contribution_pct: 30.0
+    require_nonnegative_at_2x_cost: true
+    require_parameter_plateau: true

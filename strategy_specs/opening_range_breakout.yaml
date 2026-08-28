@@ -1,0 +1,153 @@
+spec_version: "1.0"
+id: "opening_range_breakout"
+version: "0.1.0"
+research_status: "hypothesis"
+name: "Opening Range Breakout"
+
+scope:
+  markets: ["US_EQUITY", "US_ETF"]
+  timeframes: ["1m", "5m", "15m"]
+  directions: ["long", "short"]
+  session: "regular"
+
+hypothesis: >-
+  The first minutes of the regular session reveal an initial price-discovery
+  range. A close beyond that range, when accompanied by stronger-than-recent
+  intraday volume and a non-extreme range width, may continue before the close.
+
+falsification:
+  - "Out-of-sample expectancy is not positive after baseline costs."
+  - "Performance disappears under a one-bar additional entry delay."
+  - "Profit is dominated by one trade/session or an isolated parameter value."
+
+required_data:
+  fields: ["open", "high", "low", "close", "volume"]
+  previous_sessions: 1
+  warmup_bars: 20
+  extended_hours_required: false
+
+session_state:
+  - "opening_range_high"
+  - "opening_range_low"
+  - "opening_range_complete"
+  - "trades_taken_by_direction"
+  - "pending_breakout"
+
+parameters:
+  opening_range_minutes:
+    type: "int"
+    default: 15
+    minimum: 5
+    maximum: 60
+  directions:
+    type: "enum"
+    values: ["long", "short", "both"]
+    default: "both"
+  breakout_buffer_bps:
+    type: "float"
+    default: 5.0
+    minimum: 0.0
+    maximum: 50.0
+  minimum_opening_range_pct:
+    type: "float"
+    default: 0.20
+    minimum: 0.0
+    maximum: 5.0
+  maximum_opening_range_pct:
+    type: "float"
+    default: 2.50
+    minimum: 0.1
+    maximum: 20.0
+  volume_ratio_lookback_bars:
+    type: "int"
+    default: 20
+    minimum: 5
+    maximum: 100
+  minimum_volume_ratio:
+    type: "float"
+    default: 1.20
+    minimum: 0.0
+    maximum: 10.0
+  atr_period:
+    type: "int"
+    default: 14
+    minimum: 2
+    maximum: 100
+  stop_model:
+    type: "enum"
+    values: ["opposite_range", "atr", "opposite_range_or_atr"]
+    default: "opposite_range_or_atr"
+  stop_atr_multiple:
+    type: "float"
+    default: 0.80
+    minimum: 0.1
+    maximum: 5.0
+  reward_risk:
+    type: "float"
+    default: 1.50
+    minimum: 0.25
+    maximum: 10.0
+  max_trades_per_symbol_session:
+    type: "int"
+    default: 1
+    minimum: 1
+    maximum: 10
+  close_if_not_triggered_by:
+    type: "local_time"
+    default: "14:30"
+
+rules:
+  opening_range:
+    - "Build high/low from complete bars whose interval lies inside the first opening_range_minutes of regular session."
+    - "Do not trade until the opening range is complete."
+    - "Reject the session when the opening range width is outside configured percentage bounds."
+  long_entry:
+    - "Current completed bar close exceeds opening_range_high plus breakout_buffer_bps."
+    - "Current bar volume divided by the causal median of the prior lookback bars is at least minimum_volume_ratio."
+    - "No long trade has been taken beyond the per-session limit."
+    - "Signal time is not later than close_if_not_triggered_by."
+    - "Emit a market-entry intent eligible next bar; do not fill on signal close."
+  short_entry:
+    - "Symmetric close below opening_range_low minus buffer and volume condition."
+  stop:
+    - "Compute the configured stop reference from the opposite side of the range and/or ATR."
+    - "Stop must be on the adverse side of the entry reference and have positive distance."
+  target:
+    - "Target distance equals reward_risk times initial stop distance."
+  exit:
+    - "Protective bracket remains active until exit or forced session close."
+    - "No overnight position."
+
+intent_requirements:
+  sizing: "risk_per_trade"
+  include_feature_snapshot:
+    - "opening_range_high"
+    - "opening_range_low"
+    - "opening_range_width_pct"
+    - "volume_ratio"
+    - "atr"
+    - "breakout_level"
+    - "stop_reference"
+
+invariants:
+  - "No signal before opening range completion."
+  - "No hard-coded symbol."
+  - "No more than configured trades per symbol/session."
+  - "No entry signal after cutoff."
+  - "Future bars cannot change prior signals."
+  - "Session state resets on every new exchange session."
+
+acceptance_tests:
+  - "Long breakout creates one next-bar market intent and a valid bracket."
+  - "Short breakout is symmetric."
+  - "Low volume prevents entry."
+  - "Extreme opening range prevents entry."
+  - "Signal exactly at/after cutoff follows the documented boundary rule."
+  - "Same fixture works under two different symbols."
+  - "A future-bar mutation does not change earlier intents."
+
+known_limitations:
+  - "OHLCV cannot reveal breakout path inside the signal bar."
+  - "Synthetic spread/slippage replaces quote data."
+  - "Opening auction effects are not modeled."
+  - "Free-provider volume may not be consolidated."

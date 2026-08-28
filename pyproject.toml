@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "edgeback"
+version = "0.1.0"
+description = "Deterministic Python intraday backtesting and edge-research system"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "typer>=0.12.0",
+    "pydantic>=2.0.0",
+    "pandas>=2.0.0",
+    "pyarrow>=14.0.0",
+    "pyyaml>=6.0.0",
+    "pandas_market_calendars>=4.4.0",
+]
+
+[project.scripts]
+edgeback = "edgeback.cli:app"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "ruff>=0.3.0",
+    "mypy>=1.9.0",
+    "pandas-stubs>=2.0.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["edgeback*"]
+
+[tool.pytest.ini_options]
+addopts = "--strict-markers"
+markers = [
+    "network: mark test as requiring network access",
+]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP"]
+ignore = []
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+
+[[tool.mypy.overrides]]
+module = "pandas_market_calendars.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "pyarrow.*"
+ignore_missing_imports = true
