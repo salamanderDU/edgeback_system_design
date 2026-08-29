@@ -26,6 +26,7 @@ fill price, ready for the T400 portfolio ledger.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Literal
@@ -33,6 +34,7 @@ from typing import Literal
 from edgeback.domain.bars import Bar
 from edgeback.domain.fills import Fill
 from edgeback.domain.orders import Order, OrderEvent
+from edgeback.domain.positions import Position
 from edgeback.execution.costs import ExecutionCosts
 
 __all__ = [
@@ -191,6 +193,58 @@ class SimulatedBroker:
                 produced.extend(self._activate_bracket_children(order, bar))
         return produced
 
+    def force_flat_at_close(self, positions: Mapping[str, Position], bar: Bar) -> list[Fill]:
+        """
+        Engine-generated forced session-close liquidation (docs/04 §10).
+
+        For every open position for ``bar.symbol`` on the final regular-session
+        bar, build a deterministic market order that closes the position at the
+        **bar close** plus adverse spread/slippage and commission, tagged
+        ``FORCED_SESSION_CLOSE``. Any still-open protective children belonging
+        to the closed position's bracket are cancelled with
+        ``FORCED_SESSION_CLOSE_PARENT`` so they cannot fill later in the same
+        session.
+
+        This is the *only* documented same-close fill (ADR-007) and is never
+        triggered by a strategy signal: the engine calls it after strategy
+        dispatch, so a strategy cannot inspect the final close and request a
+        same-close fill of its own.
+        """
+        self._advance_clock(bar.bar_end_utc)
+        produced: list[Fill] = []
+        for symbol, pos in sorted(positions.items()):
+            if symbol != bar.symbol or pos.shares == 0:
+                continue
+            is_long = pos.shares > 0
+            fill_action: Literal["buy", "sell"] = "sell" if is_long else "buy"
+            seq = self._next_seq()
+            order = Order(
+                id=f"{symbol}-force-{seq}",
+                symbol=symbol,
+                direction="long" if is_long else "short",
+                order_type="market",
+                shares=abs(pos.shares),
+                status="open",
+                eligible_from_utc=bar.bar_end_utc,
+                creation_sequence=seq,
+                priority=0,
+                reason="FORCED_SESSION_CLOSE",
+            )
+            self._orders[order.id] = order
+            self._emit(order, "accepted", bar.bar_end_utc)
+            # Base fill is the final-bar close (the documented exception); the
+            # cost bundle applies adverse spread/slippage and commission.
+            fill = self._make_fill(order, bar.close, bar.bar_end_utc, action=fill_action)
+            self._record_fill(order, fill, bar)
+            # The position is flat now; cancel any leftover protective children.
+            self._cancel_open_children_for_symbol(symbol, bar)
+            self._warnings.append(
+                f"FORCED_SESSION_CLOSE at {bar.bar_end_utc.isoformat()} symbol={symbol}: "
+                f"{abs(pos.shares)} shares liquidated at close {bar.close}"
+            )
+            produced.append(fill)
+        return produced
+
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
@@ -301,16 +355,25 @@ class SimulatedBroker:
     # Fill production
     # ------------------------------------------------------------------
 
-    def _make_fill(self, order: Order, base_price: float, ts_utc: datetime) -> Fill:
-        action = self._action_for(order)
-        deco = self._costs.decompose(base_price=base_price, shares=order.shares, action=action)
+    def _make_fill(
+        self,
+        order: Order,
+        base_price: float,
+        ts_utc: datetime,
+        action: Literal["buy", "sell"] | None = None,
+    ) -> Fill:
+        # ``action`` is inferred from the order's entry/exit role, except for
+        # engine-generated forced-close orders where the caller supplies it
+        # explicitly (closing a long is a sell even without a parent order).
+        fill_action = action if action is not None else self._action_for(order)
+        deco = self._costs.decompose(base_price=base_price, shares=order.shares, action=fill_action)
         return Fill(
             id=self._next_fill_id(),
             order_id=order.id,
             symbol=order.symbol,
             timestamp_utc=ts_utc,
             direction=order.direction,
-            action=action,
+            action=fill_action,
             shares=order.shares,
             fill_price=base_price,
             commission_usd=deco.commission_usd,
@@ -422,6 +485,27 @@ class SimulatedBroker:
             ):
                 cancelled = order.model_copy(
                     update={"status": "cancelled", "reason": "SIBLING_FILLED"}
+                )
+                self._orders[order.id] = cancelled
+                self._emit(cancelled, "cancelled", bar.bar_end_utc)
+
+    def _cancel_open_children_for_symbol(self, symbol: str, bar: Bar) -> None:
+        """Cancel every still-open protective child for ``symbol`` after a forced close.
+
+        A forced session-close fill flattens the position; any remaining
+        stop/target children of the closed bracket would otherwise be able to
+        fill later in the next session (broker books are not cleared between
+        sessions). They are cancelled with ``FORCED_SESSION_CLOSE_PARENT`` so
+        the run ledger stays internally consistent (NFR-004).
+        """
+        for order in list(self._orders.values()):
+            if (
+                order.status == "open"
+                and order.symbol == symbol
+                and order.parent_order_id is not None
+            ):
+                cancelled = order.model_copy(
+                    update={"status": "cancelled", "reason": "FORCED_SESSION_CLOSE_PARENT"}
                 )
                 self._orders[order.id] = cancelled
                 self._emit(cancelled, "cancelled", bar.bar_end_utc)

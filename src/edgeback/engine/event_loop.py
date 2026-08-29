@@ -295,6 +295,30 @@ class SingleSymbolEventEngine:
 
                 state.equity_curve.append(self._equity_point(engine_time, ledger))
 
+            # docs/04 §10: engine-generated forced session-close liquidation on
+            # the final regular-session bar. The final bar's close *is* the
+            # calendar-provided close (early closes are honored implicitly; no
+            # hard-coded 16:00). This runs after strategy dispatch so a
+            # strategy can never inspect the final close and request a
+            # same-close fill of its own (ADR-007; only the engine-generated
+            # forced close fills on that close).
+            if self._config.engine.force_flat_at_session_end:
+                final_bar = session_bars[-1]
+                positions_before = ledger.positions()
+                broker_warning_count = len(broker.warnings)
+                close_fills = broker.force_flat_at_close(ledger.positions(), final_bar)
+                for fill in close_fills:
+                    apply_seq += 1
+                    ledger.apply_fill(fill, order_id=apply_seq)
+                    state.fills.append(fill)
+                state.events.extend(broker.events[synced_event_count:])
+                synced_event_count = len(broker.events)
+                state.warnings.extend(broker.warnings[broker_warning_count:])
+                if close_fills:
+                    self._record_closed_trades(risk, positions_before, ledger)
+                    ledger.mark_to_market(symbol, final_bar.close)
+                    state.equity_curve.append(self._equity_point(final_bar.bar_end_utc, ledger))
+
             strategy.on_session_end(
                 CausalStrategyContext(session_bars[-1].bar_end_utc, {symbol: bars})
             )

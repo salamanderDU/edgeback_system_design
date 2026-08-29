@@ -150,23 +150,30 @@ class MultiSymbolEventEngine:
 
         session_start_realized = 0.0
         session_start_equity = 0.0
-        current_session: date | None = None
         synced_event_count = 0
         apply_seq = 0
+        session_bars_accum: list[Bar] = []
 
-        for ts in timestamps:
+        for idx, ts in enumerate(timestamps):
             ts_bars = at_timestamp[ts]
             session_date = ts_bars[0].session_date
+            is_session_start = (
+                idx == 0 or at_timestamp[timestamps[idx - 1]][0].session_date != session_date
+            )
+            is_session_end = (
+                idx == len(timestamps) - 1
+                or at_timestamp[timestamps[idx + 1]][0].session_date != session_date
+            )
 
-            if session_date != current_session:
-                if current_session is not None:
-                    self._session_end(strategies, by_symbol, ts)
-                current_session = session_date
+            if is_session_start:
+                session_bars_accum = list(ts_bars)
                 session_start_realized = ledger.realized_pnl
                 session_start_equity = ledger.equity()
                 risk.on_session_start(session_start_equity)
                 for sym in symbols:
                     strategies[sym].on_session_start(CausalStrategyContext(ts, by_symbol))
+            else:
+                session_bars_accum.extend(ts_bars)
 
             # 2-4: broker evaluates eligible orders for all bars at this timestamp.
             positions_before = ledger.positions()
@@ -211,44 +218,70 @@ class MultiSymbolEventEngine:
                 else:
                     post_warmup.append(intent)
 
-            if not post_warmup:
-                state.equity_curve.append(self._equity_point(ts, ledger))
-                continue
+            if post_warmup:
+                session_pnl = (ledger.realized_pnl - session_start_realized) + sum(
+                    ledger.unrealized_pnl(open_symbol) for open_symbol in ledger.positions()
+                )
+                reference_prices = {b.symbol: b.close for b in ts_bars}
+                risk_ctx = RiskContext(
+                    equity=ledger.equity(),
+                    cash=ledger.cash,
+                    positions=ledger.positions(),
+                    gross_exposure=ledger.gross_exposure(),
+                    reference_prices=reference_prices,
+                    session_pnl=round(session_pnl, 2),
+                    current_time_utc=ts,
+                    session_date=session_date,
+                    bar_volumes={b.symbol: b.volume for b in ts_bars},
+                    estimated_cost_per_share_by_symbol={
+                        b.symbol: self._estimated_round_trip_cost_per_share(b.close)
+                        for b in ts_bars
+                    },
+                    start_equity=session_start_equity,
+                )
 
-            session_pnl = (ledger.realized_pnl - session_start_realized) + sum(
-                ledger.unrealized_pnl(open_symbol) for open_symbol in ledger.positions()
-            )
-            reference_prices = {b.symbol: b.close for b in ts_bars}
-            risk_ctx = RiskContext(
-                equity=ledger.equity(),
-                cash=ledger.cash,
-                positions=ledger.positions(),
-                gross_exposure=ledger.gross_exposure(),
-                reference_prices=reference_prices,
-                session_pnl=round(session_pnl, 2),
-                current_time_utc=ts,
-                session_date=session_date,
-                bar_volumes={b.symbol: b.volume for b in ts_bars},
-                estimated_cost_per_share_by_symbol={
-                    b.symbol: self._estimated_round_trip_cost_per_share(b.close) for b in ts_bars
-                },
-                start_equity=session_start_equity,
-            )
-
-            alloc_ctx = AllocationContext(intents=tuple(post_warmup), risk=risk, ctx=risk_ctx)
-            for decision in self._allocator.allocate(alloc_ctx):
-                state.decisions.append(decision)
-                if decision.accepted and decision.order is not None:
-                    order = decision.order.model_copy(update={"eligible_from_utc": ts})
-                    broker.submit(order, now_utc=ts)
-                    state.orders.append(order)
-                    state.events.extend(broker.events[synced_event_count:])
-                    synced_event_count = len(broker.events)
+                alloc_ctx = AllocationContext(intents=tuple(post_warmup), risk=risk, ctx=risk_ctx)
+                for decision in self._allocator.allocate(alloc_ctx):
+                    state.decisions.append(decision)
+                    if decision.accepted and decision.order is not None:
+                        order = decision.order.model_copy(update={"eligible_from_utc": ts})
+                        broker.submit(order, now_utc=ts)
+                        state.orders.append(order)
+                        state.events.extend(broker.events[synced_event_count:])
+                        synced_event_count = len(broker.events)
 
             state.equity_curve.append(self._equity_point(ts, ledger))
 
-        if current_session is not None:
-            self._session_end(strategies, by_symbol, timestamps[-1])
+            # docs/04 §10 (T460): engine-generated forced session-close
+            # liquidation on the final bars of a session. Each symbol is
+            # liquidated at its own final bar close (the calendar-provided
+            # close; no hard-coded 16:00), after strategy dispatch so no
+            # strategy can request a same-close fill (ADR-007).
+            if is_session_end and self._config.engine.force_flat_at_session_end:
+                for sym in symbols:
+                    final_bar = next(
+                        (b for b in reversed(session_bars_accum) if b.symbol == sym), None
+                    )
+                    if final_bar is None:
+                        continue
+                    positions_before_close = ledger.positions()
+                    broker_warning_count = len(broker.warnings)
+                    close_fills = broker.force_flat_at_close(ledger.positions(), final_bar)
+                    for fill in close_fills:
+                        apply_seq += 1
+                        ledger.apply_fill(fill, order_id=apply_seq)
+                        state.fills.append(fill)
+                    state.events.extend(broker.events[synced_event_count:])
+                    synced_event_count = len(broker.events)
+                    state.warnings.extend(broker.warnings[broker_warning_count:])
+                    if close_fills:
+                        self._record_closed_trades(risk, positions_before_close, ledger)
+                        ledger.mark_to_market(sym, final_bar.close)
+                        state.equity_curve.append(self._equity_point(final_bar.bar_end_utc, ledger))
+
+            # Session-end lifecycle (docs/04 §13): after forced liquidation.
+            if is_session_end:
+                self._session_end(strategies, by_symbol, ts)
 
         for sym in symbols:
             strategies[sym].finalize(CausalStrategyContext(timestamps[-1], by_symbol))

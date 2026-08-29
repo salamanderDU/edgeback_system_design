@@ -21,7 +21,7 @@ Current task: T460
 | M1 | Configuration and domain models | DONE |
 | M2 | Calendar, data schema, repository, and fixtures | DONE |
 | M3 | Strategy contract and ORB plugin | DONE |
-| M4 | Event engine, execution, portfolio, and risk | TODO |
+| M4 | Event engine, execution, portfolio, and risk | DONE |
 | M5 | Metrics, artifacts, registry, and reports | TODO |
 | M6 | CLI and free-data adapters | TODO |
 | M7 | Sweeps, walk-forward, and robustness | TODO |
@@ -55,7 +55,7 @@ Current task: T460
 | T430 | M4 | DONE | T400,T420 | Implement risk sizing, limits, reason codes, and daily lockout |
 | T440 | M4 | DONE | T200,T310,T330,T400,T420,T430 | Implement deterministic single-symbol event engine |
 | T450 | M4 | DONE | T440 | Add multi-symbol merge, shared capital, and allocation ordering |
-| T460 | M4 | TODO | T440 | Add session close liquidation, early-close tests, and failure checkpoints |
+| T460 | M4 | DONE | T440 | Add session close liquidation, early-close tests, and failure checkpoints |
 | T500 | M5 | TODO | T440 | Implement intents/orders/fills/trades/equity artifact tables |
 | T510 | M5 | TODO | T500 | Implement performance/trade/cost metrics with edge cases |
 | T520 | M5 | TODO | T500 | Implement atomic run writer, schema validation, and checksums |
@@ -222,9 +222,9 @@ Current task: T460
 
 ### T460 — Session liquidation
 
-**Status:** TODO  
+**Status:** DONE  
 **Acceptance:** normal and early close; forced exits tagged; strategy cannot exploit same-close information.  
-**Evidence:** _not yet run_
+**Evidence:** Implemented `docs/04 §10` forced session-close liquidation (ADR-014). `src/edgeback/execution/fill_engine.py`: `SimulatedBroker.force_flat_at_close(positions, bar)` builds deterministic closing orders per open position, fills at the final-bar close plus T410 cost decomposition, tags order/fill ``FORCED_SESSION_CLOSE``, and cancels still-open bracket children with ``FORCED_SESSION_CLOSE_PARENT``. `src/edgeback/engine/event_loop.py`: single-symbol engine calls forced close after each session's bar loop (post strategy dispatch, pre `on_session_end`) when `force_flat_at_session_end=true`. `src/edgeback/engine/multi_symbol.py`: timestamp loop now detects session boundaries via `is_session_start`/`is_session_end` and liquidates each symbol at its own final bar close. Both engines use the final bar's close as the calendar-provided close (no hard-coded 16:00; early closes honored implicitly). Strategy signals are never filled on their signal bar close — only the engine-generated forced close fills then (ADR-007). Added `tests/unit/test_session_liquidation.py` (7 tests): normal-close forced liquidation at final close with tag, early-close (13:00 ET) liquidation, no same-close exploit, protective children cancelled after forced close, `force_flat_at_session_end=false` disables the behavior, multi-symbol each-symbol-own-close, and deterministic rerun. T440/T450 test configs now use `force_flat_at_session_end=false` to keep their pre-T460 fill-count scopes. Validation: `pytest` 185 passed (178 baseline preserved + 7 new), `ruff check .` clean, `ruff format --check .` 92 files formatted, `mypy src` no issues in 49 source files.
 
 ### T500 — Canonical result tables
 

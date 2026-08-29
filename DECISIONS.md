@@ -139,3 +139,22 @@ Architecture decisions are append-only. Supersede an ADR with a new ADR rather t
 - Fix broker matching only, without an allocator. Rejected: shared-capital acceptance must be deterministic and disclosed (NFR-004).
 
 **Consequences:** ORB and other per-symbol strategies run correctly unchanged in multi-symbol backtests. Strategy instances are still fresh per run (no module-level mutable state, docs/04 §2). The broker's symbol filter is a correctness fix, not a semantic change for single-symbol runs. The allocator is deterministic and disclosed; future allocators (`pro_rata`) may be added behind the same interface.
+
+## ADR-014 — Engine-generated session-close liquidation derives close from the final bar; protective children are cancelled
+
+**Status:** Accepted  
+**Date:** 2026-08-29
+
+**Context:** T460 must implement `docs/04_BACKTEST_ENGINE.md` §10: the engine generates a special liquidation event on the final regular-session bar, fills at the final close plus adverse costs, tags it `FORCED_SESSION_CLOSE`, and honors early closes via the calendar (no hard-coded 16:00). The engine loop already grouped bars by session; the canonical bar set is complete and the final bar of a session is, by construction, the bar that ends at the calendar-provided session close (a regular 16:00 ET close on normal days, 13:00 ET on early-close days). A second question was what happens to still-open bracket children when a position is force-flattened.
+
+**Decision:**
+- `SimulatedBroker.force_flat_at_close(positions, bar)` builds a deterministic market order per open position for `bar.symbol`, fills at `bar.close` (the documented ADR-007 exception, whose only trigger is the engine, never a strategy signal) with the normal T410 cost decomposition, tags the order and fill `FORCED_SESSION_CLOSE`, and cancels any still-open bracket children for that symbol with `FORCED_SESSION_CLOSE_PARENT` so they cannot fill later into the next session (NFR-004).
+- Both engines call this after the per-session bar loop and after strategy dispatch, before `on_session_end` (matching docs/04 §13 `broker.force_flat_at_close(session.final_bar)`). The single-symbol engine liquidates once per session using its only final bar. The multi-symbol engine tracks session boundaries over the merged timestamp stream and liquidates each symbol using that symbol's own final bar in the session.
+- The session-close price is taken **from the final bar of the data** (the calendar-provided close by construction). A separate calendar lookup is unnecessary because the engine only ever seeds bars that belong to a session's declared bars, and the design forbids hard-coding 16:00.
+- When `engine.force_flat_at_session_end` is false (config override), no forced liquidation is generated and positions may remain open (a user-declared non-day-trade simulation). This is explicit in config and is the only way a position survives session end.
+
+**Alternatives:**
+- Query the trading calendar directly for the close time and synthesize a close event. Rejected: the engines receive canonical bars only, and introducing a calendar dependency into the engine layer would complicate offline determinism; the final bar *is* the calendar close.
+- Leave bracket children working after a forced close. Rejected: a stale stop/target would fill in the next session for a position that no longer exists, breaking ledger reconciliation and artifact explainability.
+
+**Consequences:** Day-trade default (`force_flat_at_session_end=true`) now fully matches docs/04 §7's "all positions are flat at the end of the configured session" and §10's forced liquidation semantics. Forced exits are visible in fills, orders, warnings, and broker events. Existing T440/T450 engine tests deliberately set `force_flat_at_session_end=false` so their pre-T460 fill-count assertions remain scoped to their own invariants; T460's dedicated `tests/unit/test_session_liquidation.py` covers the new behavior.
