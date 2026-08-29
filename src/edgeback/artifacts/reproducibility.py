@@ -104,7 +104,7 @@ def get_git_metadata(cwd: Path | None = None) -> tuple[str | None, bool | None]:
         )
         is_dirty = len(status.strip()) > 0
         return commit, is_dirty
-    except (subprocess.CalledProcessError, FileNotFoundError):
+    except (subprocess.CalledProcessError, FileNotFoundError, NotADirectoryError, OSError):
         return None, None
 
 

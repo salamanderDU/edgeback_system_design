@@ -2,8 +2,8 @@
 
 Last design update: 2026-08-21  
 Allowed states: `TODO`, `IN_PROGRESS`, `BLOCKED`, `DONE`  
-Current milestone: M0 — Repository bootstrap  
-Current task: T000
+Current milestone: M4 — Event engine, execution, portfolio, and risk  
+Current task: T400
 
 ## Update rules
 
@@ -17,15 +17,16 @@ Current task: T000
 
 | Milestone | Name | Status |
 |---|---|---|
-| M0 | Bootstrap and quality baseline | TODO |
+| M0 | Bootstrap and quality baseline | DONE |
 | M1 | Configuration and domain models | DONE |
-| M2 | Calendar, data schema, repository, and fixtures | TODO |
-| M3 | Strategy contract and ORB plugin | TODO |
+| M2 | Calendar, data schema, repository, and fixtures | DONE |
+| M3 | Strategy contract and ORB plugin | DONE |
 | M4 | Event engine, execution, portfolio, and risk | TODO |
 | M5 | Metrics, artifacts, registry, and reports | TODO |
 | M6 | CLI and free-data adapters | TODO |
 | M7 | Sweeps, walk-forward, and robustness | TODO |
 | M8 | Hardening, documentation, and MVP acceptance | TODO |
+
 
 ## Task index
 
@@ -47,7 +48,7 @@ Current task: T000
 | T310 | M3 | DONE | T300 | Implement causal history API and future-access guard tests |
 | T320 | M3 | DONE | T300,T310 | Implement pure feature helpers needed by ORB |
 | T330 | M3 | DONE | T320 | Implement ORB strategy from its hypothesis spec and strategy tests |
-| T340 | M3 | TODO | T300 | Implement strategy list/describe service APIs |
+| T340 | M3 | DONE | T300 | Implement strategy list/describe service APIs |
 | T400 | M4 | TODO | T120,T240 | Implement portfolio ledger and accounting invariants |
 | T410 | M4 | TODO | T120 | Implement commission, spread, and slippage models |
 | T420 | M4 | TODO | T410 | Implement order lifecycle and fill rules for market/limit/stop/bracket |
@@ -178,9 +179,10 @@ Current task: T000
 
 ### T340 — Strategy services
 
-**Status:** TODO  
+**Status:** DONE  
 **Acceptance:** list/describe returns deterministic metadata and parameter schema; duplicate ID/version conflict fails.  
-**Evidence:** _not yet run_
+**Evidence:** Implemented `src/edgeback/strategy/services.py` with `discover_strategies`, `list_strategies_service`, `describe_strategy_service`, and models `StrategySummary` and `StrategyDetail`. Tested deterministic list sorting, parameter schema extraction, metadata discovery, and duplicate ID conflict handling in `tests/unit/test_strategy_services.py`. All tests passed under pytest, Ruff, and mypy.
+
 
 ### T400 — Portfolio ledger
 

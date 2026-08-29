@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import ClassVar, Generic, TypeVar
+from typing import ClassVar
 
 from edgeback.config.models import BaseStrictModel
 from edgeback.domain.bars import Bar
@@ -7,10 +7,8 @@ from edgeback.domain.orders import OrderEvent, OrderIntent
 from edgeback.strategy.context import StrategyContext
 from edgeback.strategy.models import StrategyMetadata
 
-ParamsT = TypeVar("ParamsT", bound=BaseStrictModel)
 
-
-class Strategy(ABC, Generic[ParamsT]):
+class Strategy[ParamsT: BaseStrictModel](ABC):
     """
     Base class for all EdgeBack strategies.
     Strategies are pure logic modules and must not access the network,

@@ -38,13 +38,13 @@ class CausalStrategyContext(StrategyContext):
 
         # Filter to only bars that have completed at or before engine_time_utc
         # We assume the lists are chronological
-        causal_bars = []
+        causal_bars: list[Bar] = []
         for b in reversed(all_bars):
             if b.bar_end_utc <= self._engine_time_utc:
                 causal_bars.insert(0, b)
                 if len(causal_bars) == bars:
                     break
-        
+
         return causal_bars
 
     def create_intent(self, **kwargs: Any) -> OrderIntent:

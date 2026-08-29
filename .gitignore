@@ -15,13 +15,14 @@ venv/
 !.env.example
 
 # Runtime market data and outputs
-data/
-runs/
+/data/
+/runs/
 *.sqlite3
 *.db
 
 # Provider payloads/logs
 *.log
+/provider_payloads/
 
 # Editors/OS
 .vscode/
@@ -29,14 +30,3 @@ runs/
 .DS_Store
 Thumbs.db
 
-# Operational
-data/
-runs/
-*.db
-*.sqlite3
-
-# Env
-.env
-
-# Providers
-provider_payloads/
