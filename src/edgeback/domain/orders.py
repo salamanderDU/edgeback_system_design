@@ -20,6 +20,10 @@ class OrderIntent(BaseStrictModel):
     # Optional parameters for non-market
     limit_price: float | None = Field(default=None, gt=0.0)
     stop_price: float | None = Field(default=None, gt=0.0)
+    # Optional target for the protective bracket (docs/05 §7, ADR-012).
+    # When both stop_price and take_profit_price are set, the risk manager
+    # builds a bracket order with stop-loss and take-profit children.
+    take_profit_price: float | None = Field(default=None, gt=0.0)
 
     # Size hint. Strategy can request shares, or risk model will determine sizing
     requested_shares: int | None = Field(default=None, gt=0)

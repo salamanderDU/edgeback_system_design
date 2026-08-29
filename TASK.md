@@ -3,7 +3,7 @@
 Last design update: 2026-08-21  
 Allowed states: `TODO`, `IN_PROGRESS`, `BLOCKED`, `DONE`  
 Current milestone: M4 — Event engine, execution, portfolio, and risk  
-Current task: T400
+Current task: T440
 
 ## Update rules
 
@@ -53,7 +53,7 @@ Current task: T400
 | T410 | M4 | DONE | T120 | Implement commission, spread, and slippage models |
 | T420 | M4 | DONE | T410 | Implement order lifecycle and fill rules for market/limit/stop/bracket |
 | T430 | M4 | DONE | T400,T420 | Implement risk sizing, limits, reason codes, and daily lockout |
-| T440 | M4 | TODO | T200,T310,T330,T400,T420,T430 | Implement deterministic single-symbol event engine |
+| T440 | M4 | DONE | T200,T310,T330,T400,T420,T430 | Implement deterministic single-symbol event engine |
 | T450 | M4 | TODO | T440 | Add multi-symbol merge, shared capital, and allocation ordering |
 | T460 | M4 | TODO | T440 | Add session close liquidation, early-close tests, and failure checkpoints |
 | T500 | M5 | TODO | T440 | Implement intents/orders/fills/trades/equity artifact tables |
@@ -210,9 +210,9 @@ Current task: T400
 
 ### T440 — Single-symbol engine
 
-**Status:** TODO  
+**Status:** DONE  
 **Acceptance:** exact event sequence from design; no same-bar signal fill; deterministic rerun; failure retains diagnostics.  
-**Evidence:** _not yet run_
+**Evidence:** Implemented `src/edgeback/engine/event_loop.py` (SingleSymbolEventEngine, EngineRunResult, EquityPoint, EngineError, run_single_symbol_backtest) implementing docs/04 §2-3,13: per-session bar loop; broker evaluates eligible working orders; ledger applies fills with monotonic order ids; closed trades feed risk counters; mark-to-market each bar; strategy dispatch via CausalStrategyContext; risk batch evaluation (T430); accepted orders submitted with eligible_from_utc = bar_end_utc (next-bar start per ADR-007); warmup suppresses orders with WARMUP warnings (docs/04 §11); failures return status=FAILED with retained traceback and partial state (docs/02 §9). Exported engine API from src/edgeback/engine/__init__.py. Completed the documented strategy contract per ADR-012: OrderIntent.take_profit_price, risk manager builds bracket orders from stop+target, ORB emits take_profit_price = entry +/- reward_risk * stop_distance. Added tests/unit/test_event_engine.py (9 tests): no-same-bar fill at next open, exact events + eligible_from=signal bar end + acceptance/fill event order, full bracket lifecycle entry-to-target-exit with sibling cancellation and ledger reconciliation, warmup isolation, deterministic rerun identical outputs, failure retains diagnostics and partial state, bad-data-contract and multi-symbol FAILED results, causal-context never exposes future bars. Validation: pytest 163 passed (9 new engine tests), ruff check . clean, ruff format --check . 88 files formatted, mypy src no issues in 47 source files.
 
 ### T450 — Multi-symbol engine
 

@@ -187,11 +187,20 @@ class OpeningRangeBreakout(Strategy[OpeningRangeBreakoutParameters]):
         if signal_dir:
             self.state["trades_taken_by_direction"][signal_dir] += 1
 
+            target_price = None
+            if stop_price > 0:
+                risk_distance = abs(entry_price - stop_price)
+                if signal_dir == "long":
+                    target_price = entry_price + params.reward_risk * risk_distance
+                else:
+                    target_price = entry_price - params.reward_risk * risk_distance
+
             intent = ctx.create_intent(
                 symbol=bar.symbol,
                 direction=signal_dir,
                 intent_type="market",
                 stop_price=stop_price if stop_price > 0 else None,
+                take_profit_price=target_price,
             )
             intents.append(intent)
 

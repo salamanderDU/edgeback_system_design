@@ -104,3 +104,16 @@ Architecture decisions are append-only. Supersede an ADR with a new ADR rather t
 **Decision:** Reports use only the labels defined in `docs/06_EDGE_RESEARCH_PROTOCOL.md` and never state that an edge is guaranteed/proven.
 
 **Consequences:** Results communicate uncertainty and reduce pressure to overstate in-sample findings.
+
+## ADR-012 — Intents carry bracket target; risk builds bracket orders
+
+**Status:** Accepted  
+**Date:** 2026-08-29
+
+**Context:** docs/05 §7 specifies `OrderIntent` includes "target price/R-multiple where applicable", and docs/04 §4 lists bracket entry (stop-loss and take-profit children) as an MVP order type. The shipped `OrderIntent` had stop price but no target price, and the risk manager mapped intents to plain market/limit orders, so an end-to-end engine run could never exercise the T420 bracket semantics.
+
+**Decision:** Add an additive optional `take_profit_price: float | None = None` to `OrderIntent`. The risk manager's `_build_entry_order` maps an intent with both `stop_price` and `take_profit_price` to a `bracket` order (`stop_loss_price`/`take_profit_price` children, filled by the T420 `SimulatedBroker`), otherwise to the existing market/limit mapping. ORB emits `take_profit_price = entry_reference +/- reward_risk * stop_distance` per its hypothesis spec. This is completing the documented contract, not changing engine semantics.
+
+**Alternatives:** Keep intents stop-only and synthesize bracket children invisibly in the engine. Rejected: invisible transformation hides intent auditability (NFR-004).
+
+**Consequences:** Strategies can declare both protective legs; the broker keeps full lifecycle control; prior tests remain valid because the new field is optional and defaults to `None`.

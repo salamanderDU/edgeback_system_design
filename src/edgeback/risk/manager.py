@@ -26,6 +26,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, time
 from enum import StrEnum
+from typing import Literal
 from zoneinfo import ZoneInfo
 
 from edgeback.config.models import ExecutionConfig, RiskConfig, VolumeParticipationConfig
@@ -312,14 +313,25 @@ class RiskManager:
 
     def _build_entry_order(self, intent: OrderIntent, shares: int) -> Order:
         order_seq = len(self._pending_entry_orders) + 1
+        # ADR-012: an intent with both a stop and a take-profit becomes a
+        # bracket entry; the T420 broker activates the protective children.
+        has_bracket = intent.stop_price is not None and intent.take_profit_price is not None
+        if has_bracket:
+            order_type: Literal["market", "limit", "stop", "bracket"] = "bracket"
+        elif intent.intent_type == "limit":
+            order_type = "limit"
+        else:
+            order_type = "market"
         return Order(
             id=f"{intent.symbol}-{intent.direction}-{intent.intent_type}-{order_seq}",
             symbol=intent.symbol,
             direction="long" if intent.direction == "long" else "short",
-            order_type="market" if intent.intent_type != "limit" else "limit",
+            order_type=order_type,
             shares=shares,
             limit_price=intent.limit_price,
             stop_price=intent.stop_price,
+            stop_loss_price=intent.stop_price if has_bracket else None,
+            take_profit_price=intent.take_profit_price if has_bracket else None,
             eligible_from_utc=None,
             status="pending",
         )
