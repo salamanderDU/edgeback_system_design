@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Literal
 
 from pydantic import Field
@@ -26,10 +27,20 @@ class OrderIntent(BaseStrictModel):
     # Tag for user tracking
     tag: str = ""
 
+    # Risk-manager flag: protective exits (bracket children / forced liquidation)
+    # bypass daily lockouts and sizing (docs/04 §9).
+    protective_exit: bool = False
+
 
 class Order(BaseStrictModel):
     """
     An approved order that the execution engine will process against market bars.
+
+    Timeline/ordering fields added by T420 are optional and defaulted so the
+    model stays backward compatible. ``eligible_from_utc`` is the earliest time
+    at which the order may fill (next-bar semantics); ``expires_at_utc`` caps
+    its working life; ``creation_sequence``, ``priority``, and ``parent_order_id``
+    support deterministic evaluation and bracket children.
     """
 
     id: str
@@ -47,6 +58,12 @@ class Order(BaseStrictModel):
 
     status: Literal["pending", "open", "filled", "cancelled", "rejected"] = "pending"
     reason: str = ""
+
+    eligible_from_utc: datetime | None = None
+    expires_at_utc: datetime | None = None
+    parent_order_id: str | None = None
+    priority: int = 0
+    creation_sequence: int = 0
 
 
 class OrderEvent(BaseStrictModel):

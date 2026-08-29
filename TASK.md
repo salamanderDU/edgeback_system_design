@@ -50,9 +50,9 @@ Current task: T400
 | T330 | M3 | DONE | T320 | Implement ORB strategy from its hypothesis spec and strategy tests |
 | T340 | M3 | DONE | T300 | Implement strategy list/describe service APIs |
 | T400 | M4 | DONE | T120,T240 | Implement portfolio ledger and accounting invariants |
-| T410 | M4 | TODO | T120 | Implement commission, spread, and slippage models |
-| T420 | M4 | TODO | T410 | Implement order lifecycle and fill rules for market/limit/stop/bracket |
-| T430 | M4 | TODO | T400,T420 | Implement risk sizing, limits, reason codes, and daily lockout |
+| T410 | M4 | DONE | T120 | Implement commission, spread, and slippage models |
+| T420 | M4 | DONE | T410 | Implement order lifecycle and fill rules for market/limit/stop/bracket |
+| T430 | M4 | DONE | T400,T420 | Implement risk sizing, limits, reason codes, and daily lockout |
 | T440 | M4 | TODO | T200,T310,T330,T400,T420,T430 | Implement deterministic single-symbol event engine |
 | T450 | M4 | TODO | T440 | Add multi-symbol merge, shared capital, and allocation ordering |
 | T460 | M4 | TODO | T440 | Add session close liquidation, early-close tests, and failure checkpoints |
@@ -192,21 +192,21 @@ Current task: T400
 
 ### T410 — Cost models
 
-**Status:** TODO  
+**Status:** DONE  
 **Acceptance:** zero/fixed/per-share/bps commission; spread and bps slippage; decomposition exact within rounding policy.  
-**Evidence:** _not yet run_
+**Evidence:** Extended `src/edgeback/config/models.py` with typed `Literal` models and per-model commission parameters (`usd_per_order`, `usd_per_share`, `minimum_usd_per_order`, `bps_of_notional`) plus cross-field validation. Implemented `src/edgeback/execution/costs.py` (zero/fixed-per-order/per-share-with-minimum/bps commission; fixed-bps half-side spread; fixed-bps slippage; `CostDecomposition`; `ExecutionCosts.decompose`; factory functions) and exported it from `src/edgeback/execution/__init__.py`. Added `tests/unit/test_cost_models.py` (17 tests) covering each model, the example-backtest decomposition, config rejections, direction-sensitive effective price, and a flat round-trip cash-consistency invariant. Validation: `pytest` 107 passed (17 new), `ruff check .` passed, `ruff format --check .` 82 files formatted, `mypy src` no issues in 44 sources.
 
 ### T420 — Fill engine
 
-**Status:** TODO  
+**Status:** DONE  
 **Acceptance:** next-open market, limit improvement, gap-through stop, bracket activation, same-bar policies, expiry, and deterministic ordering tested.  
-**Evidence:** _not yet run_
+**Evidence:** Extended `src/edgeback/domain/orders.py` with timeline/ordering fields (`eligible_from_utc`, `expires_at_utc`, `parent_order_id`, `priority`, `creation_sequence` — additive) and extended `src/edgeback/config/models.py` `EngineConfig.same_bar_bracket_policy` to the four documented policies. Implemented `src/edgeback/execution/fill_engine.py` (`SimulatedBroker`): deterministic working-order book; next-bar market fill at open; buy/sell limit improvement; gap-through stop vs stop-touch; bracket children activation at entry-bar open with same-bar ambiguity resolution (stop_first/target_first/nearest_to_open/reject_ambiguous_bar); unfilled-order expiry without backfill; sibling cancellation when one protective child fills; clock/eligibility/status guards; cost-decomposed `Fill` output (T410 bundle → T400 ledger); exported from `src/edgeback/execution/__init__.py`. Added `tests/unit/test_fill_engine.py` (20 tests) covering the docs/08 §3 mandatory timing tests (no same-bar fill, gap-through stop, stop-touch, limit improvement, both-stop-and-target touched under all four policies, bracket activation into later bars, missing-next-bar expiry, deterministic ordering, lifecycle guards, and fill cost decomposition). Validation: `pytest` 127 passed (20 new fill-engine tests), `ruff check .` passed, `ruff format --check .` 84 files formatted, `mypy src` no issues in 45 source files.
 
 ### T430 — Risk manager
 
-**Status:** TODO  
+**Status:** DONE  
 **Acceptance:** risk-per-trade formula, fixed sizing modes, exposure/cash/participation caps, daily loss/trade lockouts, reason codes, and protective-exit exception tests.  
-**Evidence:** _not yet run_
+**Evidence:** Extended `src/edgeback/config/models.py` `RiskSizingConfig` with typed sizing models (`risk_per_trade`, `fixed_shares`, `fixed_notional`, `percent_equity`) and cross-field validation. Implemented `src/edgeback/risk/manager.py` (`RiskManager`, `RiskContext`, `RiskDecision`, `RiskReason`, `risk_manager_from_config`) implementing the docs/04 §8 risk pipeline: entry-time window, direction permission, daily-loss/max-trades/consecutive-loss lockouts, cooldown, duplicate-order detection, max-concurrent positions, risk-per-trade/fixed-share/fixed-notional/percent-equity sizing, per-position cap, gross-exposure cap, cash limit, volume-participation cap (reject or resize), and protective-exit bypass (docs/04 §9). Added `OrderIntent.protective_exit` (additive, defaulted False) and exported the risk package. Added `tests/unit/test_risk_manager.py` (27 tests) covering the docs/04 §8 risk-per-trade formula (with and without estimated cost), all sizing modes, caps with reason codes, daily lockouts, cooldown, duplicate/concurrent checks, protective-exit exemption, session reset, and missing-reference-price rejection. Validation: `pytest` 154 passed (27 new risk tests), `ruff check .` passed, `ruff format --check .` 86 files formatted, `mypy src` no issues in 46 source files.
 
 ### T440 — Single-symbol engine
 
