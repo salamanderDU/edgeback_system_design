@@ -117,3 +117,25 @@ Architecture decisions are append-only. Supersede an ADR with a new ADR rather t
 **Alternatives:** Keep intents stop-only and synthesize bracket children invisibly in the engine. Rejected: invisible transformation hides intent auditability (NFR-004).
 
 **Consequences:** Strategies can declare both protective legs; the broker keeps full lifecycle control; prior tests remain valid because the new field is optional and defaults to `None`.
+
+## ADR-013 — Multi-symbol engine: per-symbol strategy instances, broker symbol filter, and shared-capital allocator
+
+**Status:** Accepted  
+**Date:** 2026-08-29
+
+**Context:** T450 must merge bars across symbols by `bar_end_utc`, evaluate fills in deterministic order, invoke `on_bar` per symbol in canonical symbol order, risk-check emitted intents as a batch against shared capital, and allocate simultaneous orders deterministically (docs/02 §7, docs/04 §12). Two implementation gaps block this:
+1. `SimulatedBroker.on_bar` evaluates every open order against the given bar without checking `order.symbol == bar.symbol`. With multiple symbols a working order for one symbol could match (and fill on) another symbol's bar prices — a correctness bug for multi-symbol runs.
+2. Strategies such as ORB store per-symbol session state in instance attributes without a symbol key (`self.state["trades_taken_by_direction"]`, `self.state["opening_range_high"]`). A single shared strategy instance across symbols would corrupt state across symbols. docs/05 §3 says `on_bar` is "invoked in deterministic symbol order" but does not specify instance-per-symbol; instance sharing is therefore ambiguous.
+
+**Decision:**
+- The multi-symbol engine keeps **one strategy instance per canonical symbol**, all built from the same configuration parameters. Each instance receives a `CausalStrategyContext` whose `bars_by_symbol` still contains the full multi-symbol causal bar set (history access to other symbols remains available and causally bounded).
+- `SimulatedBroker.on_bar` and `on_bars` will evaluate only working orders whose `order.symbol` equals `bar.symbol`; the single-symbol behavior is unchanged because all orders share the symbol.
+- Shared capital is enforced by evaluating all emitted intents at a timestamp as a **batch**: a deterministic `priority_then_symbol` allocator sorts candidate intents by (priority descending, canonical symbol ascending, intent creation order) and evaluates each against a projected portfolio state that reflects capital/exposure reservations made by earlier-accepted intents in the same batch. `priority` is declared on the intent (docs/05 §7 lists priority as an intent field); the engine sets `creation_order` by the per-symbol `on_bar` dispatch order. Rejected/resized decisions are recorded with reason codes exactly like single-symbol runs.
+- Unknown `engine.entry_allocation` values fail fast at engine construction. `priority_then_symbol` is the only documented MVP allocator (docs/02 §7).
+
+**Alternatives:**
+- Share one strategy instance and key state by symbol. Rejected: it would require modifying every existing strategy's internal state convention and leaks per-symbol bookkeeping into strategy authors' responsibilities.
+- Allocate sequentially without projection. Rejected: evaluation order would depend on the order intents were emitted, which depends on symbol dispatch order, breaking symbol-order-independent economics.
+- Fix broker matching only, without an allocator. Rejected: shared-capital acceptance must be deterministic and disclosed (NFR-004).
+
+**Consequences:** ORB and other per-symbol strategies run correctly unchanged in multi-symbol backtests. Strategy instances are still fresh per run (no module-level mutable state, docs/04 §2). The broker's symbol filter is a correctness fix, not a semantic change for single-symbol runs. The allocator is deterministic and disclosed; future allocators (`pro_rata`) may be added behind the same interface.

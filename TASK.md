@@ -3,7 +3,7 @@
 Last design update: 2026-08-21  
 Allowed states: `TODO`, `IN_PROGRESS`, `BLOCKED`, `DONE`  
 Current milestone: M4 — Event engine, execution, portfolio, and risk  
-Current task: T440
+Current task: T460
 
 ## Update rules
 
@@ -54,7 +54,7 @@ Current task: T440
 | T420 | M4 | DONE | T410 | Implement order lifecycle and fill rules for market/limit/stop/bracket |
 | T430 | M4 | DONE | T400,T420 | Implement risk sizing, limits, reason codes, and daily lockout |
 | T440 | M4 | DONE | T200,T310,T330,T400,T420,T430 | Implement deterministic single-symbol event engine |
-| T450 | M4 | TODO | T440 | Add multi-symbol merge, shared capital, and allocation ordering |
+| T450 | M4 | DONE | T440 | Add multi-symbol merge, shared capital, and allocation ordering |
 | T460 | M4 | TODO | T440 | Add session close liquidation, early-close tests, and failure checkpoints |
 | T500 | M5 | TODO | T440 | Implement intents/orders/fills/trades/equity artifact tables |
 | T510 | M5 | TODO | T500 | Implement performance/trade/cost metrics with edge cases |
@@ -216,9 +216,9 @@ Current task: T440
 
 ### T450 — Multi-symbol engine
 
-**Status:** TODO  
+**Status:** DONE  
 **Acceptance:** timestamp merge, symbol ordering, shared capital, simultaneous intent allocation, and symbol-order-independent economic result under declared allocator.  
-**Evidence:** _not yet run_
+**Evidence:** Implemented `src/edgeback/engine/allocation.py` (`allocator` new; ADR-013): `IntentAllocator` protocol, `PriorityThenSymbolAllocator` (sorts candidates by (-priority, canonical symbol, creation order) and evaluates each against a projected cash/gross-exposure state that reserves earlier-accepted notional — shared-capital batch semantics, docs/02 §7), `build_allocator` failing fast on unknown names. Implemented `src/edgeback/engine/multi_symbol.py` (`MultiSymbolEventEngine`, `MultiSymbolRunResult`, `run_multi_symbol_backtest`): bars merged by `bar_end_utc`; per-symbol strategy instances in canonical symbol order (ADR-013); one shared broker/ledger/risk manager; broker evaluates only orders whose `order.symbol == bar.symbol` (ADR-013 symbol filter); per-symbol warmup isolation; per-symbol reference prices/bar volumes/estimated costs for the risk batch; accepted orders eligible_from=bar_end_utc (ADR-007); failures retain diagnostics (docs/02 §9). Extended `src/edgeback/risk/manager.py` `RiskContext` with `bar_volumes` + `estimated_cost_per_share_by_symbol` and propagated `OrderIntent.priority` to built orders. Added additive `OrderIntent.priority` (docs/05 §7). Updated `src/edgeback/engine/__init__.py`. Added `tests/unit/test_multi_symbol_engine.py` (14 tests: timestamp merge + per-symbol fills/no-same-bar, canonical symbol dispatch order, per-symbol instance isolation, shared-capital allocation with GROSS_EXPOSURE_LIMIT rejection, priority-then-symbol ordering, symbol-order-independent economics across reversed bars/config, per-symbol warmup suppression, deterministic rerun, duplicate/overlap/incomplete-bar rejection, failure diagnostics retention, allocator fail-fast) and `tests/unit/test_fill_engine.py` (updated deterministic-ordering test to per-symbol bars + new `test_broker_symbol_filter_prevents_cross_symbol_fill`). Validation: `pytest` 178 passed (15 new), `ruff check .` passed, `ruff format --check .` 91 files formatted, `mypy src` no issues in 49 source files.
 
 ### T460 — Session liquidation
 

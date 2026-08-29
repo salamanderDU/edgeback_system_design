@@ -23,7 +23,7 @@ sizing so bracket children are never blocked by daily controls (docs/04 §9).
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, time
 from enum import StrEnum
 from typing import Literal
@@ -90,8 +90,15 @@ class RiskContext:
         Exchange-local session date.
     bar_volume
         Current bar volume (for participation cap); ``None`` disables the cap.
+    bar_volumes
+        Per-symbol bar volumes for multi-symbol batch evaluation (T450); when
+        non-empty it takes precedence over ``bar_volume`` for the intent's symbol.
     estimated_cost_per_share
         Estimated round-trip cost per share used by risk-per-trade sizing.
+    estimated_cost_per_share_by_symbol
+        Per-symbol estimated round-trip cost per share for multi-symbol batch
+        evaluation (T450); when non-empty it takes precedence over
+        ``estimated_cost_per_share`` for the intent's symbol.
     start_equity
         Equity at session start (daily-loss baseline); defaults to ``equity``.
     """
@@ -105,7 +112,9 @@ class RiskContext:
     current_time_utc: datetime | None = None
     session_date: date | None = None
     bar_volume: int | None = None
+    bar_volumes: dict[str, int] = field(default_factory=dict)
     estimated_cost_per_share: float = 0.0
+    estimated_cost_per_share_by_symbol: dict[str, float] = field(default_factory=dict)
     start_equity: float | None = None
 
 
@@ -276,8 +285,9 @@ class RiskManager:
                 )
 
         # 8. Volume participation.
-        if self._volume_participation is not None and ctx.bar_volume is not None:
-            capped = self._apply_participation_cap(sized, ctx.bar_volume)
+        volume = ctx.bar_volumes.get(intent.symbol) if ctx.bar_volumes else ctx.bar_volume
+        if self._volume_participation is not None and volume is not None:
+            capped = self._apply_participation_cap(sized, volume)
             if capped <= 0:
                 return self._reject(
                     intent,
@@ -334,6 +344,7 @@ class RiskManager:
             take_profit_price=intent.take_profit_price if has_bracket else None,
             eligible_from_utc=None,
             status="pending",
+            priority=intent.priority,
         )
 
     def _accept_protective(self, intent: OrderIntent) -> RiskDecision:
@@ -375,7 +386,12 @@ class RiskManager:
         # risk_per_trade (docs/04 §8)
         assert sizing.risk_per_trade_pct_of_equity is not None
         assert intent.stop_price is not None
-        risk_per_share = abs(price - intent.stop_price) + ctx.estimated_cost_per_share
+        cost_per_share = (
+            ctx.estimated_cost_per_share_by_symbol.get(intent.symbol, 0.0)
+            if ctx.estimated_cost_per_share_by_symbol
+            else ctx.estimated_cost_per_share
+        )
+        risk_per_share = abs(price - intent.stop_price) + cost_per_share
         if risk_per_share <= 0:
             return 0
         risk_budget = ctx.equity * sizing.risk_per_trade_pct_of_equity / 100.0

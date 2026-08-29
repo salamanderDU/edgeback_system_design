@@ -35,6 +35,12 @@ class OrderIntent(BaseStrictModel):
     # bypass daily lockouts and sizing (docs/04 §9).
     protective_exit: bool = False
 
+    # Deterministic allocation priority among simultaneous intents (docs/05 §7).
+    # Higher values win first under the ``priority_then_symbol`` allocator
+    # (docs/02 §7); ties break by canonical symbol ascending, then creation
+    # order. Defaults to 0 so existing strategies keep equal priority.
+    priority: int = 0
+
 
 class Order(BaseStrictModel):
     """

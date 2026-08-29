@@ -434,11 +434,35 @@ def test_deterministic_order_evaluation() -> None:
         market_order("o-aa2", symbol="AAAA", eligible_from=dt(9, 35), priority=10),
         now_utc=dt(9, 35),
     )
-    bar = make_bar(start=dt(9, 35), open_=100.0, high=101.0, low=99.5, close=100.5)
-    fills = broker.on_bars([bar])
-    # Sort by (-priority, symbol, creation_sequence):
-    #   o-aa (prio 10, AAAA), o-aa2 (prio 10, AAAA, later seq), o-zz (prio 0).
+    # Same timestamp, one bar per symbol (ADR-013 symbol filter).
+    bars = [
+        make_bar(symbol="AAAA", start=dt(9, 35), open_=100.0, high=101.0, low=99.5, close=100.5),
+        make_bar(symbol="ZZZZ", start=dt(9, 35), open_=50.0, high=51.0, low=49.5, close=50.5),
+    ]
+    fills = broker.on_bars(bars)
+    # Per symbol, sort by (-priority, symbol, creation_sequence):
+    #   AAAA: o-aa (prio 10), o-aa2 (prio 10, later seq); ZZZZ: o-zz (prio 0).
+    # on_bars processes AAAA first (sorted by bar_end_utc, equal → input order).
     assert [f.order_id for f in fills] == ["o-aa", "o-aa2", "o-zz"]
+    assert fills[2].symbol == "ZZZZ"
+
+
+def test_broker_symbol_filter_prevents_cross_symbol_fill() -> None:
+    """An order for one symbol never matches another symbol's bar (ADR-013)."""
+    broker = SimulatedBroker(zero_costs())
+    broker.submit(market_order("aaa-order", symbol="AAAA", eligible_from=dt(9, 35)))
+    # A BBB bar at the same time must not fill the AAAA order, even when the
+    # price path would match.
+    other_bar = make_bar(symbol="BBBB", start=dt(9, 35), open_=1.0, high=2.0, low=0.5, close=1.5)
+    assert broker.on_bars([other_bar]) == []
+    assert broker.get_order("aaa-order").status == "open"
+    # The AAAA bar at the same timestamp fills it.
+    own_bar = make_bar(
+        symbol="AAAA", start=dt(9, 35), open_=100.0, high=101.0, low=99.5, close=100.5
+    )
+    fills = broker.on_bars([own_bar])
+    assert len(fills) == 1
+    assert fills[0].order_id == "aaa-order"
 
 
 def test_broker_clock_rejects_backwards() -> None:

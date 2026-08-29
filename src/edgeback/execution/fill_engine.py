@@ -166,13 +166,20 @@ class SimulatedBroker:
         return produced
 
     def on_bar(self, bar: Bar) -> list[Fill]:
-        """Evaluate the working book against one completed bar."""
+        """Evaluate the working book against one completed bar.
+
+        Only orders whose ``order.symbol`` equals ``bar.symbol`` are evaluated
+        (ADR-013): without this filter a working order for one symbol could
+        match (and fill on) another symbol's bar prices in multi-symbol runs.
+        """
         self._advance_clock(bar.bar_end_utc)
         self._expire_unfilled(bar)
         produced: list[Fill] = []
 
         for order in self._order_eval_sequence():
-            if order.status != "open" or not self._is_eligible(order, bar):
+            if order.status != "open" or order.symbol != bar.symbol:
+                continue
+            if not self._is_eligible(order, bar):
                 continue
             base = self._match_base_price(order, bar)
             if base is None:
