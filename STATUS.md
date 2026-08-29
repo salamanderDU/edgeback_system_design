@@ -1,76 +1,43 @@
 # STATUS.md — Current Project Checkpoint
 
 **Last updated:** 2026-08-29
-**Project state:** T340_COMPLETE
+**Project state:** T400_COMPLETE
 **Current milestone:** M4 — Event engine, execution, portfolio, and risk
-**Current task:** T400 — Portfolio ledger
-**Current task status:** TODO
-**Working tree:** T340 complete. M0, M1, M2, and M3 are all complete. All 64 unit tests pass cleanly, Ruff lint/format checks pass, and mypy type checks pass with 0 errors.
+**Current task:** T410 — Cost models
+**Current task status:** TODO (T410 depends only on T120)
+**Working tree:** T400 complete. Baseline was green before T400; after T400 all gates remain green: 90 tests pass, Ruff lint/format pass, mypy clean (43 source files).
 
 ## Current objective
 
-T400: Implement portfolio ledger and accounting invariants (`src/edgeback/portfolio/ledger.py` and `src/edgeback/portfolio/accounting.py`).
+T410: Implement commission, spread, and slippage models in `src/edgeback/execution/costs.py` (zero/fixed/per-share/bps commission; spread and bps slippage; decomposition exact within rounding policy). Note: T410's dependency list is `T120` only; the ledger's per-fill cost fields (`commission_usd`, `spread_usd`, `slippage_usd`) from T400 define the target decomposition.
 
 ## Completed in the latest session
 
-- Restored data layer modules (`schema.py`, `manifest.py`, `repository.py`, and local providers) and fixed root-scoped `.gitignore` pattern.
-- Implemented `src/edgeback/strategy/services.py` containing:
-  - `discover_strategies()` for safe discovery and conflict detection of registered strategies from the trusted `strategies/` package.
-  - `list_strategies_service()` returning deterministically sorted `StrategySummary` objects.
-  - `describe_strategy_service(strategy_id)` returning `StrategyDetail` with full metadata and Pydantic JSON parameter schema.
-- Added `StrategySummary` and `StrategyDetail` models in `src/edgeback/strategy/models.py`.
-- Registered `OpeningRangeBreakout` with `@register_strategy`.
-- Implemented comprehensive unit tests in `tests/unit/test_strategy_services.py` testing list sorting, parameter schema extraction, default parameter capture, missing strategy handling, and duplicate strategy ID conflict detection.
-- Passed full test suite (64/64 tests) and all quality gates (`ruff check`, `ruff format --check`, `mypy src`).
-- Marked T340 as DONE in `TASK.md` and updated milestone summary (M3 complete).
+- Implemented `src/edgeback/portfolio/accounting.py` and `src/edgeback/portfolio/ledger.py` for T400:
+  - `accounting.py`: pure helpers (Decimal `ROUND_HALF_UP` money rounding, `signed_quantity`, `cash_delta_for_fill`, informational `effective_price` decomposition, `weighted_average`, `total_fill_cost_usd`) and an independent `project_fills` replay used for reconciliation.
+  - `ledger.py`: `PortfolioLedger` mutable state machine with cash/leverage guards evaluated against **projected** state before mutation, timezone-aware non-decreasing timestamp and monotonic order-id guards, `mark_to_market`, realized/unrealized P&L, gross/net exposure, equity, leverage, `positions()`/`snapshot()` domain outputs, and `reconcile()` returning a `ReconciliationReport`.
+  - Accounting model: signed net shares; realized P&L at base execution prices; spread/slippage/commission all flow through cash, so a flat round trip satisfies `cash_change = realized_pnl - total_costs`.
+- Updated `src/edgeback/portfolio/__init__.py` to export the public portfolio API.
+- Added `tests/unit/test_portfolio.py` (26 tests) covering long/short round trips with costs, weighted-average adds, partial/full/crossing closes, mark-to-market/exposure, cash and leverage guards leaving state untouched, timezone/order-ID/non-positive-share guards, deterministic typed position snapshots, and hand-computed reconciliation invariants.
+- Repaired a stale venv: the editable install pointed at old `edgeback_system_design_v1`; reinstalled `pip install -e . --no-deps`.
 
-## Implementation completed
+## Files changed in this session
 
-- Configurations models `src/edgeback/config/models.py`
-- Configuration loader `src/edgeback/config/loader.py`
-- Domain schemas `src/edgeback/domain/bars.py`, `fills.py`, `positions.py`, `orders.py`
-- Reproducibility artifacts `src/edgeback/artifacts/reproducibility.py`
-- Calendar abstractions `src/edgeback/calendar/interfaces.py`, `src/edgeback/calendar/xnys.py`
-- Local Data Schema models `src/edgeback/data/schema.py`
-- Local Provider mapping logic `src/edgeback/data/providers/interfaces.py`, `local.py`
-- Repository interactions `src/edgeback/data/manifest.py`, `repository.py`
-- Core Data Fixtures `tests/fixtures/synthetic.py`, `test_fixtures.py`
-- Strategy contract `src/edgeback/strategy/models.py`, `context.py`, `base.py`, `registry.py`
-- Strategy services `src/edgeback/strategy/services.py`
-- Causal context `src/edgeback/strategy/history.py`
-- Feature helpers `src/edgeback/features/range.py`, `indicators.py`
-- Opening Range Breakout Strategy `strategies/opening_range_breakout.py`
-- ORB Strategy Tests `tests/unit/test_strategy_orb.py`
-- Strategy Services Tests `tests/unit/test_strategy_services.py`
-
-## Files changed in latest session
-
-- `.gitignore`
-- `src/edgeback/data/__init__.py`
-- `src/edgeback/data/schema.py`
-- `src/edgeback/data/manifest.py`
-- `src/edgeback/data/repository.py`
-- `src/edgeback/data/providers/__init__.py`
-- `src/edgeback/data/providers/interfaces.py`
-- `src/edgeback/data/providers/local.py`
-- `src/edgeback/strategy/__init__.py`
-- `src/edgeback/strategy/base.py`
-- `src/edgeback/strategy/models.py`
-- `src/edgeback/strategy/registry.py`
-- `src/edgeback/strategy/services.py`
-- `src/edgeback/strategy/history.py`
-- `src/edgeback/artifacts/reproducibility.py`
-- `strategies/opening_range_breakout.py`
-- `tests/unit/test_strategy_services.py`
-- `TASK.md`
-- `STATUS.md`
+- `src/edgeback/portfolio/accounting.py` (new)
+- `src/edgeback/portfolio/ledger.py` (new)
+- `src/edgeback/portfolio/__init__.py` (new exports)
+- `tests/unit/test_portfolio.py` (new, 26 tests)
+- `src/edgeback/data/providers/interfaces.py` (formatting only: removed a stray blank line)
+- `src/edgeback.egg-info/SOURCES.txt` (regenerated by `pip install -e . --no-deps` during the venv repair)
+- `TASK.md` (T400 → DONE with evidence)
+- `STATUS.md` (this checkpoint)
 
 ## Validation performed
 
-- `python -m pytest` (64 passed in 1.74s)
+- `python -m pytest` (90 passed — 26 new portfolio tests; 64 pre-existing)
 - `python -m ruff check .` (All checks passed)
-- `python -m ruff format --check .` (77 files already formatted)
-- `python -m mypy src` (Success: no issues found in 41 source files)
+- `python -m ruff format --check .` (80 files already formatted)
+- `python -m mypy src` (Success: no issues found in 43 source files)
 
 ## Known blockers
 
@@ -78,11 +45,11 @@ T400: Implement portfolio ledger and accounting invariants (`src/edgeback/portfo
 
 ## Exact next actions
 
-1. Start T400: Implement portfolio ledger and accounting invariants (`src/edgeback/portfolio/ledger.py` and `src/edgeback/portfolio/accounting.py`).
-2. Mark T400 as `IN_PROGRESS` in `TASK.md` and update `STATUS.md` before editing files.
-3. Implement portfolio ledger handling long/short positions, cash tracking, mark-to-market valuations, realized/unrealized P&L, and equity snapshots.
-4. Add unit and invariant tests in `tests/unit/test_portfolio.py`.
+1. Start T410 (depends on T120 only): implement `src/edgeback/execution/costs.py` with commission models (`zero`, `fixed_per_order`, `per_share`, `bps`), spread model (`fixed_bps`), slippage model (`fixed_bps`), and a decomposition function producing the per-fill `commission_usd` / `spread_usd` / `slippage_usd` fields consumed by the T400 ledger.
+2. Add `tests/unit/test_cost_models.py` covering zero/fixed/per-share/bps commission, fixed-bps spread and slippage, minimum-commission behavior, and exact decomposition within the documented rounding policy.
+3. Mark T410 `IN_PROGRESS` in `TASK.md` and update this file before editing.
+4. Run `pytest`, `ruff check .`, `ruff format --check .`, `mypy src`; record evidence and mark T410 DONE.
 
 ## Resume note
 
-Safe to resume. M3 is completed. The next task to pick up is `T400` in milestone `M4`.
+Safe to resume. T400 is complete with all gates green; the exact next task is T410 (cost models), which is independent of the not-yet-started execution/fill-engine tasks.

@@ -49,7 +49,7 @@ Current task: T400
 | T320 | M3 | DONE | T300,T310 | Implement pure feature helpers needed by ORB |
 | T330 | M3 | DONE | T320 | Implement ORB strategy from its hypothesis spec and strategy tests |
 | T340 | M3 | DONE | T300 | Implement strategy list/describe service APIs |
-| T400 | M4 | TODO | T120,T240 | Implement portfolio ledger and accounting invariants |
+| T400 | M4 | DONE | T120,T240 | Implement portfolio ledger and accounting invariants |
 | T410 | M4 | TODO | T120 | Implement commission, spread, and slippage models |
 | T420 | M4 | TODO | T410 | Implement order lifecycle and fill rules for market/limit/stop/bracket |
 | T430 | M4 | TODO | T400,T420 | Implement risk sizing, limits, reason codes, and daily lockout |
@@ -186,9 +186,9 @@ Current task: T400
 
 ### T400 — Portfolio ledger
 
-**Status:** TODO  
+**Status:** DONE  
 **Acceptance:** long/short accounting, fees, mark-to-market, realized/unrealized P&L, exposure, and reconciliation invariants pass.  
-**Evidence:** _not yet run_
+**Evidence:** Implemented `src/edgeback/portfolio/accounting.py` (pure helpers: Decimal ROUND_HALF_UP money rounding, signed-quantity/cash-delta/effective-price decomposition, weighted-average price, and an independent `project_fills` replay) and `src/edgeback/portfolio/ledger.py` (`PortfolioLedger` mutable state machine with cash/leverage guards evaluated against projected state before mutation, timezone-aware non-decreasing timestamp and monotonic order-id guards, mark-to-market, realized/unrealized P&L, gross/net exposure, equity, session P&L accumulator, and `reconcile()` returning a `ReconciliationReport`). Accounting model: positions are signed net shares; realized P&L uses base execution prices while spread/slippage/commission flow through cash, so a flat round trip satisfies `cash_change = realized_pnl - total_costs`. Updated `src/edgeback/portfolio/__init__.py` to export the public API. Added `tests/unit/test_portfolio.py` (26 tests) covering long/short round trips with costs, weighted-average adds, partial/full/crossing closes, mark-to-market and exposure, cash/leverage guards leaving state untouched, timezone/order-ID/non-positive-share guards, deterministic position snapshots, and hand-computed reconciliation invariants. Validation: `pytest` 90 passed (26 new portfolio tests), `ruff check .` all passed, `ruff format --check .` 80 files formatted, `mypy src` no issues in 43 source files.
 
 ### T410 — Cost models
 
