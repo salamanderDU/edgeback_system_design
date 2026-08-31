@@ -2,8 +2,8 @@
 
 Last design update: 2026-08-21  
 Allowed states: `TODO`, `IN_PROGRESS`, `BLOCKED`, `DONE`  
-Current milestone: M4 — Event engine, execution, portfolio, and risk  
-Current task: T460
+Current milestone: M5 — Metrics, artifacts, registry, and reports  
+Current task: T500
 
 ## Update rules
 
@@ -22,7 +22,7 @@ Current task: T460
 | M2 | Calendar, data schema, repository, and fixtures | DONE |
 | M3 | Strategy contract and ORB plugin | DONE |
 | M4 | Event engine, execution, portfolio, and risk | DONE |
-| M5 | Metrics, artifacts, registry, and reports | TODO |
+| M5 | Metrics, artifacts, registry, and reports | IN_PROGRESS |
 | M6 | CLI and free-data adapters | TODO |
 | M7 | Sweeps, walk-forward, and robustness | TODO |
 | M8 | Hardening, documentation, and MVP acceptance | TODO |
@@ -228,9 +228,9 @@ Current task: T460
 
 ### T500 — Canonical result tables
 
-**Status:** TODO  
+**Status:** IN_PROGRESS  
 **Acceptance:** complete linkage among intents/orders/fills/trades; Parquet schemas stable; reason and cost fields present.  
-**Evidence:** _not yet run_
+**Evidence:** implementing `src/edgeback/artifacts/tables.py` (parquet_* writers under T500; run-writer wiring deferred to T520).
 
 ### T510 — Metrics
 

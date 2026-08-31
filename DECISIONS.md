@@ -140,6 +140,26 @@ Architecture decisions are append-only. Supersede an ADR with a new ADR rather t
 
 **Consequences:** ORB and other per-symbol strategies run correctly unchanged in multi-symbol backtests. Strategy instances are still fresh per run (no module-level mutable state, docs/04 §2). The broker's symbol filter is a correctness fix, not a semantic change for single-symbol runs. The allocator is deterministic and disclosed; future allocators (`pro_rata`) may be added behind the same interface.
 
+## ADR-015 — Trade linkage uses FIFO lot matching with base-price P&L and pro-rata cost attribution
+
+**Status:** Accepted  
+**Date:** 2026-08-29
+
+**Context:** `docs/04_BACKTEST_ENGINE.md` §14 requires persisted "closed trades with entry/exit linkage", but does not specify how fills spanning multiple entry/exit legs, position flips (a close that crosses through flat), or partial closes map to round-trip trades. T510 (metrics) and the HTML report (T540) will consume this table, so the matching rule must be deterministic and consistent with the ledger's accounting model (T400: positions are signed net shares; realized P&L uses base execution prices; spread/slippage/commission flow through cash).
+
+**Decision:** `src/edgeback/artifacts/tables.py` builds the `trades.parquet` table with **first-in-first-out (FIFO) lot matching**:
+- Each fill either opens a new lot (if it increases the absolute net position) or consumes existing lots in FIFO order (if it reduces/closes).
+- A fill that crosses through flat emits one closed trade per lot consumed at the shared exit, then opens a fresh lot for the remaining quantity (a flip is therefore two trades for the same symbol: one closed round trip plus a new open lot that is not yet a trade).
+- Realized P&L per closed trade uses **base execution prices** exactly like `edgeback.portfolio.accounting`: long `(exit_base - entry_base) * closed`, short `(entry_base - cover_base) * covered`. This makes `sum(trades.realized_pnl) == ledger.reconciliation.realized_pnl` when the run ends flat.
+- Entry and exit costs are attributed **pro-rata** from the originating fills (cost committed to the trade in proportion to the shares it contributes to/consumes), rounded to cents. This makes `sum(trades.total_cost_usd)` equal the total fill costs for a flat run, so `net_pnl = realized_pnl - total_cost_usd` reconciles to cash.
+- Exit reason label is `STOP_LOSS` / `TAKE_PROFIT` for protective children (identified structurally by parent/order type), `FORCED_SESSION_CLOSE` for engine liquidation, otherwise the fill/order reason (docs/04 §14).
+
+**Alternatives:**
+- Average-cost close without lot identity. Rejected: loses per-entry linkage required by docs/04 §14 and makes holding-time and entry/exit-order attribution ambiguous.
+- Attribute all costs to a single fill. Rejected: biased net P&L per trade when entry/exit share counts differ (e.g., partial exits).
+
+**Consequences:** Deterministic, audit-friendly trade reconstruction that reconciles to the ledger. Remaining open positions at run end produce no trade row (they are unrealized). Metrics (T510) must use `net_pnl` (cost-inclusive) while whole-run realized P&L comparison uses `realized_pnl`.
+
 ## ADR-014 — Engine-generated session-close liquidation derives close from the final bar; protective children are cancelled
 
 **Status:** Accepted  
