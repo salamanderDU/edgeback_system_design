@@ -1,44 +1,62 @@
+from __future__ import annotations
+
 import statistics
 from collections.abc import Sequence
 
-from edgeback.domain.bars import Bar
+from edgeback.domain import Bar
 
 
-def true_range(bar: Bar, prev_bar: Bar | None = None) -> float:
-    """Calculate True Range for a bar."""
-    if prev_bar is None:
-        return bar.high - bar.low
+def true_range(current: Bar, previous_close: float | None) -> float:
+    if previous_close is None:
+        return current.high - current.low
+    return max(
+        current.high - current.low,
+        abs(current.high - previous_close),
+        abs(current.low - previous_close),
+    )
 
-    return max(bar.high - bar.low, abs(bar.high - prev_bar.close), abs(bar.low - prev_bar.close))
 
-
-def calculate_atr(bars: Sequence[Bar], period: int) -> float | None:
-    """
-    Calculate Average True Range (ATR) using simple moving average.
-    Returns None if fewer than `period` bars are provided.
-    """
+def atr(bars: Sequence[Bar], period: int) -> float | None:
+    if period <= 0:
+        raise ValueError("period must be positive")
     if len(bars) < period:
         return None
+    selected = bars[-period:]
+    ranges: list[float] = []
+    previous_close: float | None = bars[-period - 1].close if len(bars) > period else None
+    for bar in selected:
+        ranges.append(true_range(bar, previous_close))
+        previous_close = bar.close
+    return sum(ranges) / len(ranges)
 
-    trs = []
-    for i in range(len(bars)):
-        prev = bars[i - 1] if i > 0 else None
-        trs.append(true_range(bars[i], prev))
 
-    # Use SMA for the last 'period' true ranges
-    return sum(trs[-period:]) / period
-
-
-def calculate_volume_ratio(current_bar: Bar, lookback_bars: Sequence[Bar]) -> float | None:
-    """
-    Calculate the ratio of the current bar's volume to the median volume of the lookback_bars.
-    Returns None if lookback_bars is empty or if median volume is 0.
-    """
-    if not lookback_bars:
+def median_volume_ratio(history_before_current: Sequence[Bar], current_volume: int, lookback: int) -> float | None:
+    if lookback <= 0:
+        raise ValueError("lookback must be positive")
+    if len(history_before_current) < lookback:
         return None
-
-    median_vol = statistics.median(b.volume for b in lookback_bars)
-    if median_vol == 0:
+    baseline = statistics.median(bar.volume for bar in history_before_current[-lookback:])
+    if baseline <= 0:
         return None
+    return float(current_volume) / float(baseline)
 
-    return current_bar.volume / median_vol
+
+def session_vwap(bars: Sequence[Bar]) -> float | None:
+    if not bars:
+        return None
+    total_volume = sum(bar.volume for bar in bars)
+    if total_volume <= 0:
+        return None
+    dollar_volume = sum(((bar.high + bar.low + bar.close) / 3.0) * bar.volume for bar in bars)
+    return dollar_volume / total_volume
+
+
+def vwap_series(bars: Sequence[Bar]) -> tuple[float | None, ...]:
+    total_volume = 0
+    dollar_volume = 0.0
+    output: list[float | None] = []
+    for bar in bars:
+        total_volume += bar.volume
+        dollar_volume += ((bar.high + bar.low + bar.close) / 3.0) * bar.volume
+        output.append(dollar_volume / total_volume if total_volume > 0 else None)
+    return tuple(output)

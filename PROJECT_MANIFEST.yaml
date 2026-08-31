@@ -8,7 +8,7 @@ project:
   language: Python
   target_python: '3.12'
   initial_market_scope: US equities and ETFs
-  implementation_status: DESIGN_COMPLETE_IMPLEMENTATION_NOT_STARTED
+  implementation_status: IMPLEMENTED_0_1_0_OFFLINE_VALIDATED
   design_verified_on: '2026-08-21'
 mission: Build a deterministic, event-driven intraday backtesting system in which symbols are selected
   through configuration and each strategy is isolated in its own Python module. The system must support
@@ -26,6 +26,11 @@ read_order:
 - docs/07_CLI_CONFIG_AND_ARTIFACTS.md
 - docs/08_TESTING_AND_ACCEPTANCE.md
 - docs/09_FREE_DATA_SOURCES.md
+- docs/10_USER_GUIDE.md
+- docs/11_STRATEGY_AUTHORING.md
+- docs/12_PROVIDER_AUTHORING.md
+- docs/13_ARTIFACTS_AND_RESEARCH.md
+- docs/14_TROUBLESHOOTING.md
 - strategy_specs/README.md
 - strategy_specs/opening_range_breakout.yaml
 - strategy_specs/vwap_mean_reversion.yaml

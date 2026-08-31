@@ -1,67 +1,73 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=69", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "edgeback"
 version = "0.1.0"
-description = "Deterministic Python intraday backtesting and edge-research system"
+description = "Deterministic event-driven intraday backtesting and edge-research system"
 readme = "README.md"
 requires-python = ">=3.12"
+license = {text = "MIT"}
+authors = [{name = "EdgeBack contributors"}]
 dependencies = [
-    "typer>=0.12.0",
-    "pydantic>=2.0.0",
-    "pandas>=2.0.0",
-    "pyarrow>=14.0.0",
-    "pyyaml>=6.0.0",
-    "pandas_market_calendars>=4.4.0",
+  "pydantic>=2.7",
+  "pandas>=2.2",
+  "pyarrow>=14",
+  "PyYAML>=6",
+  "typer>=0.12",
+  "exchange-calendars>=4.5",
+  "Jinja2>=3.1",
+  "httpx>=0.27",
+  "yfinance>=0.2.40",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8",
+  "pytest-cov>=5",
+  "ruff>=0.8",
+  "mypy>=1.11",
+  "pandas-stubs>=2.2",
+  "types-PyYAML>=6",
 ]
 
 [project.scripts]
 edgeback = "edgeback.cli:app"
 
-[project.optional-dependencies]
-dev = [
-    "pytest>=8.0.0",
-    "ruff>=0.3.0",
-    "mypy>=1.9.0",
-    "pandas-stubs>=2.0.0",
-]
-
 [tool.setuptools.packages.find]
-where = ["src"]
-include = ["edgeback*"]
+where = ["src", "."]
+include = ["edgeback*", "strategies*"]
+exclude = ["tests*", "docs*"]
 
 [tool.pytest.ini_options]
-addopts = "--strict-markers"
-markers = [
-    "network: mark test as requiring network access",
-]
+addopts = "--strict-markers -ra"
 testpaths = ["tests"]
+markers = [
+  "network: requires external network access",
+  "slow: long-running research or performance test",
+]
 
 [tool.ruff]
 line-length = 100
 target-version = "py312"
+exclude = ["runs", "data", ".venv"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "W", "UP"]
-ignore = []
+select = ["E", "F", "I", "W", "UP", "B", "SIM"]
+ignore = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
 
 [tool.mypy]
 python_version = "3.12"
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = true
-disallow_incomplete_defs = true
+packages = ["edgeback"]
+strict = true
+warn_unused_ignores = true
+show_error_codes = true
+exclude = ["tests", "strategies"]
 
 [[tool.mypy.overrides]]
-module = "tests.*"
-disallow_untyped_defs = false
-
-[[tool.mypy.overrides]]
-module = "pandas_market_calendars.*"
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = "pyarrow.*"
+module = ["pandas.*", "pyarrow.*", "exchange_calendars.*", "yfinance.*"]
 ignore_missing_imports = true

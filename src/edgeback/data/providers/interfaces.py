@@ -1,38 +1,62 @@
-from abc import ABC, abstractmethod
+from __future__ import annotations
+
 from datetime import datetime
-from typing import Any
+from typing import Protocol
 
-from pydantic import ConfigDict, Field
+import pandas as pd
+from pydantic import Field, field_validator
 
-from edgeback.config.models import BaseStrictModel
+from edgeback.domain.common import DomainModel, UTCModel
 
 
-class BarRequest(BaseStrictModel):
-    symbols: list[str]
-    interval_seconds: int
+class ProviderCapabilities(DomainModel):
+    provider_id: str
+    feeds: tuple[str, ...]
+    intervals: tuple[str, ...]
+    earliest_history: str | None = None
+    latest_data_delay_minutes: int | None = Field(default=None, ge=0)
+    rate_limit_per_minute: int | None = Field(default=None, ge=0)
+    limitations: tuple[str, ...] = ()
+
+
+class ProviderSymbol(DomainModel):
+    canonical_symbol: str
+    provider_symbol: str
+
+
+class BarRequest(UTCModel):
+    symbols: tuple[str, ...]
+    interval: str
     start_utc: datetime
     end_utc: datetime
-    include_pre_market: bool = False
-    include_post_market: bool = False
-    feed: str | None = None
+    feed: str
+    include_extended_hours: bool = False
     adjustment_mode: str = "split_adjusted"
 
+    @field_validator("start_utc", "end_utc")
+    @classmethod
+    def timestamps_are_utc(cls, value: datetime) -> datetime:
+        return cls.ensure_aware_utc(value)
 
-class RawBarBatch(BaseStrictModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, frozen=True, extra="forbid")
 
-    data: Any  # pd.DataFrame
+class RawBarBatch(DomainModel):
+    request_id: str
     provider_id: str
-    source_feed: str
-    fetched_at_utc: datetime = Field(default_factory=lambda: datetime.now())
+    feed: str
+    frame: object
+    metadata: dict[str, object] = Field(default_factory=dict)
+
+    def dataframe(self) -> pd.DataFrame:
+        if not isinstance(self.frame, pd.DataFrame):
+            raise TypeError("RawBarBatch.frame is not a pandas DataFrame")
+        return self.frame.copy(deep=True)
 
 
-class MarketDataProvider(ABC):
-    @property
-    @abstractmethod
-    def provider_id(self) -> str:
-        pass
+class MarketDataProvider(Protocol):
+    provider_id: str
 
-    @abstractmethod
-    def fetch_bars(self, request: BarRequest) -> RawBarBatch:
-        pass
+    def describe_capabilities(self) -> ProviderCapabilities: ...
+
+    def resolve_symbol(self, canonical_symbol: str) -> ProviderSymbol: ...
+
+    def fetch_bars(self, request: BarRequest) -> RawBarBatch: ...

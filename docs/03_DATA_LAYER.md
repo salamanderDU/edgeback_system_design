@@ -190,3 +190,4 @@ The repository enforces that the returned maximum `bar_end_utc` is not later tha
 - Provider limits can change. Capabilities are queried or documented at ingestion time and stored in the manifest.
 
 See `docs/09_FREE_DATA_SOURCES.md` for the verified starting matrix.
+

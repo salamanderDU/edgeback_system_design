@@ -1,69 +1,70 @@
+from __future__ import annotations
+
+import math
 from datetime import date, datetime
-from typing import Literal
+from typing import Any, Self
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 
-from edgeback.config.models import BaseStrictModel
+from edgeback.domain.common import UTCModel
+from edgeback.domain.enums import SessionType
 
 
-class Bar(BaseStrictModel):
-    """
-    Canonical Bar representing OHLCV data for an interval.
-    Matches schemas/bar.schema.json.
-    """
-
-    symbol: str = Field(pattern="^[A-Z0-9.\\-]+$")
-    provider_symbol: str = Field(min_length=1)
+class Bar(UTCModel):
+    symbol: str
+    provider_symbol: str
     interval_seconds: int = Field(gt=0)
-
-    # Needs to be aware
     bar_start_utc: datetime
     bar_end_utc: datetime
-
     session_date: date
-    session_type: Literal["regular", "pre", "post", "overnight"]
-
-    open: float = Field(gt=0.0)
-    high: float = Field(gt=0.0)
-    low: float = Field(gt=0.0)
-    close: float = Field(gt=0.0)
+    session_type: SessionType = SessionType.REGULAR
+    open: float = Field(gt=0)
+    high: float = Field(gt=0)
+    low: float = Field(gt=0)
+    close: float = Field(gt=0)
     volume: int = Field(ge=0)
-
-    vwap: float | None = Field(default=None, gt=0.0)
+    vwap: float | None = Field(default=None, gt=0)
     trade_count: int | None = Field(default=None, ge=0)
-
-    is_complete: bool
-    source_provider: str = Field(min_length=1)
-    source_feed: str = Field(min_length=1)
-    adjustment_mode: Literal["raw", "split_adjusted", "provider_adjusted"]
+    is_complete: bool = True
+    source_provider: str
+    source_feed: str
+    adjustment_mode: str
     ingested_at_utc: datetime
 
+    @field_validator("symbol", "provider_symbol")
+    @classmethod
+    def normalize_symbol(cls, value: str) -> str:
+        value = value.strip().upper()
+        if not value:
+            raise ValueError("symbol must not be empty")
+        return value
+
+    @field_validator("bar_start_utc", "bar_end_utc", "ingested_at_utc")
+    @classmethod
+    def timestamps_are_utc(cls, value: datetime) -> datetime:
+        return cls.ensure_aware_utc(value)
+
+    @field_validator("open", "high", "low", "close", "vwap")
+    @classmethod
+    def finite_prices(cls, value: float | None) -> float | None:
+        if value is not None and not math.isfinite(value):
+            raise ValueError("price must be finite")
+        return value
+
     @model_validator(mode="after")
-    def validate_ohlc_and_times(self: "Bar") -> "Bar":
-        # Check OHLC logical bounds
-        if not (self.low <= self.open <= self.high):
-            raise ValueError(
-                f"Open {self.open} must be between Low {self.low} and High {self.high}"
-            )
-        if not (self.low <= self.close <= self.high):
-            raise ValueError(
-                f"Close {self.close} must be between Low {self.low} and High {self.high}"
-            )
-
-        # Timezone checking
-        stz = self.bar_start_utc.tzinfo
-        if stz is None or stz.utcoffset(self.bar_start_utc) is None:
-            raise ValueError("bar_start_utc must be timezone-aware (UTC)")
-
-        etz = self.bar_end_utc.tzinfo
-        if etz is None or etz.utcoffset(self.bar_end_utc) is None:
-            raise ValueError("bar_end_utc must be timezone-aware (UTC)")
-
-        itz = self.ingested_at_utc.tzinfo
-        if itz is None or itz.utcoffset(self.ingested_at_utc) is None:
-            raise ValueError("ingested_at_utc must be timezone-aware (UTC)")
-
-        if self.bar_start_utc >= self.bar_end_utc:
-            raise ValueError("bar_start_utc must be strictly before bar_end_utc")
-
+    def validate_bar(self) -> Self:
+        if self.bar_end_utc <= self.bar_start_utc:
+            raise ValueError("bar_end_utc must be after bar_start_utc")
+        actual = int((self.bar_end_utc - self.bar_start_utc).total_seconds())
+        if actual != self.interval_seconds:
+            raise ValueError("bar duration does not equal interval_seconds")
+        if self.high < max(self.open, self.close):
+            raise ValueError("high must be at least max(open, close)")
+        if self.low > min(self.open, self.close):
+            raise ValueError("low must be at most min(open, close)")
+        if self.high < self.low:
+            raise ValueError("high must be >= low")
         return self
+
+    def to_record(self) -> dict[str, Any]:
+        return self.model_dump(mode="python")

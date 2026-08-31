@@ -14,19 +14,21 @@ venv/
 .env.*
 !.env.example
 
-# Runtime market data and outputs
+# Runtime data and immutable experiment outputs
 /data/
 /runs/
 *.sqlite3
 *.db
-
-# Provider payloads/logs
-*.log
 /provider_payloads/
+*.log
 
-# Editors/OS
+# Editors / OS
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
 
+# Build artifacts
+/build/
+/dist/
+*.egg-info/

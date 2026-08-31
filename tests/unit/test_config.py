@@ -1,68 +1,73 @@
+from __future__ import annotations
+
+from datetime import UTC, datetime
+from pathlib import Path
+
 import pytest
 from pydantic import ValidationError
 
-from edgeback.config.models import (
-    DateRangeConfig,
-    RiskConfig,
-    RiskSizingConfig,
-)
+from edgeback.config.hashing import config_hash
+from edgeback.config.loader import parse_typed_value, resolve_config
+from edgeback.config.models import DateRangeConfig, ResolvedConfig
+from edgeback.errors import ConfigurationError
 
 
-def test_config_frozen() -> None:
-    config = DateRangeConfig(mode="rolling", lookback_calendar_days=50)
-    with pytest.raises(ValidationError):
-        config.lookback_calendar_days = 60  # type: ignore
+ROOT = Path(__file__).parents[2]
 
 
-def test_config_extra_forbid() -> None:
-    with pytest.raises(ValidationError):
-        DateRangeConfig(mode="rolling", lookback_calendar_days=50, random_extra_key="bad")  # type: ignore
-
-
-def test_date_range_validation() -> None:
-    # Valid rolling
-    DateRangeConfig(mode="rolling", lookback_calendar_days=30)
-
-    # Invalid rolling
-    with pytest.raises(ValidationError, match="rolling mode requires lookback_calendar_days"):
-        DateRangeConfig(mode="rolling")
-
-    # Valid exact
-    DateRangeConfig(mode="exact", start="2024-01-01")
-
-    # Invalid exact
-    with pytest.raises(ValidationError, match="exact mode requires start date"):
-        DateRangeConfig(mode="exact")
-
-
-def test_risk_config_validation() -> None:
-    # Valid
-    RiskConfig(
-        direction="both",
-        sizing=RiskSizingConfig(model="risk_per_trade", risk_per_trade_pct_of_equity=1.0),
-        max_position_pct_of_equity=25.0,
-        max_gross_exposure_pct=100.0,
-        max_concurrent_positions=3,
-        max_trades_per_session=4,
-        max_daily_loss_pct_of_starting_equity=1.0,
-        max_consecutive_losses=3,
-        entry_start_time="09:30",
-        latest_entry_time="15:30",
-        cooldown_bars_after_exit=1,
+def test_example_config_resolves_rolling_range_and_normalizes_symbols() -> None:
+    config = resolve_config(
+        ROOT / "configs/example_backtest.yaml",
+        symbols=[" aapl ", "MSFT", "aapl"],
+        params=["opening_range_minutes=30", "reward_risk=2.0"],
+        now=datetime(2026, 8, 31, tzinfo=UTC),
     )
+    assert config.data.symbols == ("AAPL", "MSFT")
+    assert config.data.date_range.mode == "explicit"
+    assert config.data.date_range.end.isoformat() == "2026-08-31"
+    assert config.strategy.params["opening_range_minutes"] == 30
+    assert config.strategy.params["reward_risk"] == 2.0
 
-    # Invalid times
-    with pytest.raises(ValidationError, match="entry_start_time cannot be after latest_entry_time"):
-        RiskConfig(
-            direction="both",
-            sizing=RiskSizingConfig(model="risk_per_trade", risk_per_trade_pct_of_equity=1.0),
-            max_position_pct_of_equity=25.0,
-            max_gross_exposure_pct=100.0,
-            max_concurrent_positions=3,
-            max_trades_per_session=4,
-            max_daily_loss_pct_of_starting_equity=1.0,
-            max_consecutive_losses=3,
-            entry_start_time="15:30",
-            latest_entry_time="09:30",
-            cooldown_bars_after_exit=1,
-        )
+
+def test_unknown_config_key_is_rejected() -> None:
+    payload = resolve_config(ROOT / "configs/example_backtest.yaml").model_dump(mode="python")
+    payload.pop("resolution", None)
+    payload["engine"]["future_magic"] = True
+    with pytest.raises(ValidationError):
+        ResolvedConfig.model_validate(payload)
+
+
+def test_date_range_modes_are_exclusive() -> None:
+    with pytest.raises(ValidationError):
+        DateRangeConfig(mode="explicit", start=None, end=None)
+    with pytest.raises(ValidationError):
+        DateRangeConfig(mode="rolling", start="2025-01-01", lookback_calendar_days=10)
+
+
+def test_unsafe_yaml_tag_is_rejected(tmp_path: Path) -> None:
+    config_path = tmp_path / "bad.yaml"
+    config_path.write_text("!!python/object/apply:os.system ['echo nope']", encoding="utf-8")
+    with pytest.raises(ConfigurationError):
+        resolve_config(config_path)
+
+
+def test_typed_override_never_executes_python() -> None:
+    assert parse_typed_value("[1, 2]") == [1, 2]
+    with pytest.raises(ConfigurationError):
+        parse_typed_value("!!python/object/apply:os.system ['echo nope']")
+
+
+def test_config_hash_ignores_resolution_timestamp() -> None:
+    first = resolve_config(
+        ROOT / "configs/example_backtest.yaml", now=datetime(2026, 8, 30, tzinfo=UTC)
+    )
+    second = resolve_config(
+        ROOT / "configs/example_backtest.yaml", now=datetime(2026, 8, 31, tzinfo=UTC)
+    )
+    # Rolling ranges legitimately resolve differently, so use an explicit copy for the identity assertion.
+    payload = first.model_dump(mode="python", exclude={"resolution"})
+    first_explicit = ResolvedConfig.model_validate(payload)
+    second_explicit = ResolvedConfig.model_validate(
+        {**payload, "resolution": second.resolution.model_dump(mode="python")}
+    )
+    assert config_hash(first_explicit) == config_hash(second_explicit)

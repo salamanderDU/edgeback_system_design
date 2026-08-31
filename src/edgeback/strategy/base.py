@@ -1,56 +1,49 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import ClassVar
+from typing import ClassVar, Generic, TypeVar
 
-from edgeback.config.models import BaseStrictModel
-from edgeback.domain.bars import Bar
-from edgeback.domain.orders import OrderEvent, OrderIntent
+from edgeback.domain import Bar, OrderEvent, OrderIntent
 from edgeback.strategy.context import StrategyContext
-from edgeback.strategy.models import StrategyMetadata
+from edgeback.strategy.models import StrategyMetadata, StrategyParameters
+
+ParamsT = TypeVar("ParamsT", bound=StrategyParameters)
 
 
-class Strategy[ParamsT: BaseStrictModel](ABC):
-    """
-    Base class for all EdgeBack strategies.
-    Strategies are pure logic modules and must not access the network,
-    disk, or mutate engine state directly.
-    """
-
+class Strategy(ABC, Generic[ParamsT]):
     strategy_id: ClassVar[str]
     strategy_version: ClassVar[str]
-    params_model: ClassVar[type[BaseStrictModel]]
+    params_model: ClassVar[type[ParamsT]]
 
     def __init__(self, params: ParamsT) -> None:
         self.params = params
 
     @classmethod
     @abstractmethod
-    def metadata(cls) -> StrategyMetadata:
-        """Return the strategy's metadata."""
-        pass
+    def metadata(cls) -> StrategyMetadata: ...
 
     def initialize(self, ctx: StrategyContext) -> None:
-        """Called once when the backtest starts."""
-        pass
+        del ctx
 
     def on_session_start(self, ctx: StrategyContext) -> None:
-        """Called at the beginning of each trading session."""
-        pass
+        del ctx
 
-    def on_bar(self, ctx: StrategyContext, bar: Bar) -> list[OrderIntent]:
-        """
-        Called when a canonical bar is completed.
-        Returns a list of order intents.
-        """
-        return []
+    @abstractmethod
+    def on_bar(self, ctx: StrategyContext, bar: Bar) -> list[OrderIntent]: ...
 
     def on_order_update(self, ctx: StrategyContext, event: OrderEvent) -> None:
-        """Called when an order state changes."""
-        pass
+        del ctx, event
 
     def on_session_end(self, ctx: StrategyContext) -> list[OrderIntent]:
-        """Called at the end of each trading session."""
+        del ctx
         return []
 
     def finalize(self, ctx: StrategyContext) -> None:
-        """Called once when the backtest completes."""
-        pass
+        del ctx
+
+    def serializable_state(self) -> dict[str, object]:
+        return {
+            key: value
+            for key, value in vars(self).items()
+            if key != "params" and isinstance(value, (str, int, float, bool, list, tuple, dict, type(None)))
+        }

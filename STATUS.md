@@ -1,55 +1,56 @@
 # STATUS.md — Current Project Checkpoint
 
-**Last updated:** 2026-08-29
-**Project state:** M5_IN_PROGRESS
-**Current milestone:** M5 — Metrics, artifacts, registry, and reports (IN_PROGRESS)
-**Current task:** T500 — Canonical result tables
-**Current task status:** IN_PROGRESS (T500 marked IN_PROGRESS in TASK.md; implementation started)
-**Working tree:** M4 complete. All gates green at handoff: 185 tests pass, Ruff lint/format pass, mypy clean (49 source files). No new code beyond TASK.md/STATUS.md markers.
+**Last updated:** 2026-08-31 (Asia/Singapore)  
+**Project state:** IMPLEMENTATION_COMPLETE_EXTERNAL_GATES_PENDING  
+**Current milestone:** M8 — Hardening, documentation, and MVP acceptance  
+**Current task:** T830 — Release and safe handoff  
+**Current task status:** BLOCKED only on unavailable external quality/backend validation  
+**Working tree:** Complete source implementation, tests, documentation, wheel, and release materials are present. Runtime data, generated runs, caches, and build directories are excluded from the release archive.
 
 ## Current objective
 
-**T500 — Canonical result tables** (M5). T500 depends on T440 (DONE) and must implement the intents/orders/fills/trades/equity Parquet artifact tables with complete linkage, stable schemas, and reason/cost fields per `docs/07_CLI_CONFIG_AND_ARTIFACTS.md` §8-11 and `docs/04_BACKTEST_ENGINE.md` §14. The M4 engines already produce all tuples needed (intents, decisions, orders, fills, broker events, warnings, equity curve, reconciliation); T500 turns them into canonical Parquet tables.
+Deliver EdgeBack 0.1.0 as a complete deterministic intraday backtesting and edge-research system while recording the exact validation that was possible in this offline environment and the remaining external gates honestly.
 
-## In progress this session
+## Implementation completed
 
-- **T500 IN_PROGRESS — canonical result tables (new module `src/edgeback/artifacts/tables.py`).**
-  - Task marked IN_PROGRESS in `TASK.md`; milestone summary updated to M5 IN_PROGRESS.
-  - Implement `parquet_intents`, `parquet_decisions`, `parquet_orders`, `parquet_fills`, `parquet_trades`, `parquet_equity`, and `parquet_warnings` writers with stable Arrow schemas.
-  - Complete linkage: every order links to its originating intent (via creation/direction/symbol), fills link to orders, trades link entry/exit fills and orders, per-bar equity snapshots.
-  - Reason codes (RiskReason) and cost decomposition fields (spread/slippage/commission/effective price) present per docs/07 §10 and docs/04 §6/§14.
-  - Trades table: signed realized P&L at base prices, entry/exit fill order ids, side, symbol, entry/exit timestamps, holding seconds, tags (protective/forced), costs.
-  - Tests: schema stability (column names/arrow types), linkage invariants (`fill.order_id` exists in orders, trades reconcile to realized P&L via `project_fills`), deterministic rerun produces identical tables, both engine result types accepted, failure/empty inputs handled.
-  - Deferred to T520 (run writer): directory layout, atomic write, checksums, run metadata JSON.
+- Strict, frozen Pydantic configuration; safe YAML loading; symbol and strategy-parameter CLI overrides; stable configuration hashing.
+- Typed domain models, XNYS calendar support, canonical market-data validation/normalization, manifests, local import, yfinance, and Alpaca IEX adapters.
+- Causal strategy context and trusted registry with separate ORB, session-VWAP mean-reversion, and gap-momentum strategy modules.
+- Deterministic single- and multi-symbol event engine with next-bar signal fills, explicit market/limit/stop/bracket behavior, four ambiguity policies, costs, risk sizing/limits, shared capital, portfolio reconciliation, and calendar-driven session liquidation.
+- Stable result tables, cost-inclusive metrics, atomic immutable run artifacts, checksums/tamper verification, SQLite registry, and self-contained HTML reporting.
+- Chronological train/validation/test splits, deterministic sweeps, rolling/anchored walk-forward, cost/delay/parameter robustness, session bootstrap, concentration checks, and constrained conclusion labels.
+- Full Typer CLI, offline fixtures, mocked provider tests, opt-in live provider tests, CI configuration, documentation, release checklist, source release, and wheel.
 
-## Files changed
+## Validation performed
 
-- `TASK.md` (title header milestone → M5; milestone summary M5 IN_PROGRESS; T500 detail → IN_PROGRESS with evidence line)
-- `STATUS.md` (this checkpooint)
+- `PYTHONPATH=src:. pytest -q -m 'not network' -W error::ResourceWarning` → **56 passed, 2 deselected**.
+- `python -m compileall -q src strategies templates benchmarks` → passed.
+- Coverage run → **86% overall**; event engine 93%, broker 92%, portfolio ledger 95%, configuration models 94%, metrics 93%.
+- Custom AST import-use and forbidden-shortcut scans → passed: no core `eval`/`exec`, no unsafe YAML loading, no common hard-coded tradable-symbol literals in `src/edgeback` or `strategies`, and network imports are confined to provider adapters.
+- Clean-directory CLI workflow → doctor PASS, three strategies discovered, fixture validation PASS, immutable backtest artifacts and report created, CLI symbol replacement resolved correctly.
+- Two logically equivalent clean-directory runs produced identical SHA-256 values for canonical intents, orders, fills, trades, equity, metrics, and gate results.
+- Wheel built and installed into an isolated target; version 0.1.0 and all three trusted strategy plugins imported successfully.
+- Wheel SHA-256: `c7d4868001a822c1a9c4ab88aeeef0d1f75c016a67dbbf18bd0c0b5ed8092a31`.
 
-## Validation (exact commands)
+## External blockers
 
-- Baseline at handoff: `.venv/bin/python -m pytest` → 185 passed; `.venv/bin/ruff check .` clean; `.venv/bin/ruff format --check .` 92 files formatted; `.venv/bin/python -m mypy src` → no issues in 49 source files.
-- T500 checks pending after implementation.
+- This execution environment has no package-network access and does not contain Ruff, mypy, or PyArrow. Therefore `ruff check .`, `ruff format --check .`, `mypy src`, and the genuine PyArrow Parquet backend could not be executed here.
+- The project declares and configures those dependencies/gates in `pyproject.toml` and `.github/workflows/ci.yml`. The constrained local table fallback has a distinct non-Parquet magic header and never claims to be genuine Parquet.
+- Live yfinance/Alpaca smoke tests were not run because network access is disabled and Alpaca credentials are absent. Mocked tests and opt-in tests marked `network` are included.
 
-## Blockers
+## Exact next actions in a connected Python 3.12 environment
 
-- None.
+```bash
+python -m pip install -e '.[dev]'
+pytest -m 'not network' -W error::ResourceWarning
+ruff check .
+ruff format --check .
+mypy src
+pytest -m network tests/network  # optional; requires network and provider credentials
+```
 
-## Notes for next session
-
-- T500 will add `src/edgeback/artifacts/tables.py` plus `tests/unit/test_artifact_tables.py`.
-- `.env.example` exists at repo root (confirmed).
-- `pyproject.toml` still has the unused `module = ['tests.*']` mypy section (pre-existing; clean-up optional).
-- mypy's `.venv/bin/mypy` executable has a stale shebang; use `.venv/bin/python -m mypy src`.
-- T520 (atomic run writer) will consume the T500 table writers; T510 (metrics) consumes fills/trades/equity tables.
-
-## Exact next actions
-
-1. Write `src/edgeback/artifacts/tables.py` (canonical Parquet table writers + stable Arrow schemas).
-2. Add `tests/unit/test_artifact_tables.py` (schema stability, linkage invariants, determinism, both engine results, edge cases).
-3. Run `pytest`, `ruff check .`, `ruff format --check .`, `mypy src`; record evidence; mark T500 DONE.
+Then run the release checklist and change T010, T800, and T830 from `BLOCKED` to `DONE` only after the unavailable gates pass. T810 may remain `BLOCKED` when live provider access is intentionally unavailable.
 
 ## Resume note
 
-Safe to resume. T500 IN_PROGRESS with exact next action documented. Baseline gates green at session start.
+Safe to resume. No implementation file is half-written. All known environment limitations are explicit, generated runtime directories are ignored, and the release archive can be independently extracted and tested offline.

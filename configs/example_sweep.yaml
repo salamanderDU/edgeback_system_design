@@ -48,3 +48,4 @@ research:
     maximum_single_session_profit_contribution_pct: 30.0
     require_nonnegative_at_2x_cost: true
     require_parameter_plateau: true
+

@@ -5,112 +5,29 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "symbol",
-    "provider_symbol",
-    "interval_seconds",
-    "bar_start_utc",
-    "bar_end_utc",
-    "session_date",
-    "session_type",
-    "open",
-    "high",
-    "low",
-    "close",
-    "volume",
-    "is_complete",
-    "source_provider",
-    "source_feed",
-    "adjustment_mode",
-    "ingested_at_utc"
+    "symbol", "provider_symbol", "interval_seconds", "bar_start_utc", "bar_end_utc",
+    "session_date", "session_type", "open", "high", "low", "close", "volume",
+    "is_complete", "source_provider", "source_feed", "adjustment_mode", "ingested_at_utc"
   ],
   "properties": {
-    "symbol": {
-      "type": "string",
-      "pattern": "^[A-Z0-9.\\-]+$"
-    },
-    "provider_symbol": {
-      "type": "string",
-      "minLength": 1
-    },
-    "interval_seconds": {
-      "type": "integer",
-      "minimum": 1
-    },
-    "bar_start_utc": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "bar_end_utc": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "session_date": {
-      "type": "string",
-      "format": "date"
-    },
-    "session_type": {
-      "enum": [
-        "regular",
-        "pre",
-        "post",
-        "overnight"
-      ]
-    },
-    "open": {
-      "type": "number",
-      "exclusiveMinimum": 0
-    },
-    "high": {
-      "type": "number",
-      "exclusiveMinimum": 0
-    },
-    "low": {
-      "type": "number",
-      "exclusiveMinimum": 0
-    },
-    "close": {
-      "type": "number",
-      "exclusiveMinimum": 0
-    },
-    "volume": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "vwap": {
-      "type": [
-        "number",
-        "null"
-      ],
-      "exclusiveMinimum": 0
-    },
-    "trade_count": {
-      "type": [
-        "integer",
-        "null"
-      ],
-      "minimum": 0
-    },
-    "is_complete": {
-      "type": "boolean"
-    },
-    "source_provider": {
-      "type": "string",
-      "minLength": 1
-    },
-    "source_feed": {
-      "type": "string",
-      "minLength": 1
-    },
-    "adjustment_mode": {
-      "enum": [
-        "raw",
-        "split_adjusted",
-        "provider_adjusted"
-      ]
-    },
-    "ingested_at_utc": {
-      "type": "string",
-      "format": "date-time"
-    }
+    "symbol": {"type": "string", "minLength": 1},
+    "provider_symbol": {"type": "string", "minLength": 1},
+    "interval_seconds": {"type": "integer", "minimum": 1},
+    "bar_start_utc": {"type": "string", "format": "date-time"},
+    "bar_end_utc": {"type": "string", "format": "date-time"},
+    "session_date": {"type": "string", "format": "date"},
+    "session_type": {"enum": ["regular", "pre", "post", "overnight"]},
+    "open": {"type": "number", "exclusiveMinimum": 0},
+    "high": {"type": "number", "exclusiveMinimum": 0},
+    "low": {"type": "number", "exclusiveMinimum": 0},
+    "close": {"type": "number", "exclusiveMinimum": 0},
+    "volume": {"type": "integer", "minimum": 0},
+    "vwap": {"type": ["number", "null"]},
+    "trade_count": {"type": ["integer", "null"], "minimum": 0},
+    "is_complete": {"type": "boolean"},
+    "source_provider": {"type": "string", "minLength": 1},
+    "source_feed": {"type": "string", "minLength": 1},
+    "adjustment_mode": {"type": "string", "minLength": 1},
+    "ingested_at_utc": {"type": "string", "format": "date-time"}
   }
 }

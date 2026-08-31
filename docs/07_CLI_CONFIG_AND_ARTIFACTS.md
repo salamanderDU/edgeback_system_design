@@ -220,3 +220,4 @@ JSONL log: timestamp UTC, level, component, run ID, event/reason code, symbol wh
 ## 14. Configuration migration
 
 Every config has `config_version`. Loaders may migrate old versions explicitly and record the migration. Unknown future versions fail with guidance. Silent reinterpretation is forbidden.
+

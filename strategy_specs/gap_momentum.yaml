@@ -53,3 +53,4 @@ known_limitations:
   - "No news classification; extreme-event concentration must be reported."
   - "Free data may omit delisted historical gap candidates, creating survivorship bias."
   - "Short borrow availability is unknown."
+

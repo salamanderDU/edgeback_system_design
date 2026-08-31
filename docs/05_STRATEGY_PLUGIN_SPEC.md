@@ -188,3 +188,4 @@ The design bundle includes three hypothesis specs:
 - `gap_momentum`
 
 They are test cases and research starting points, not proven edges. Implement ORB first because it exercises session state, time windows, bracket exits, and next-bar timing without requiring a second data feed.
+

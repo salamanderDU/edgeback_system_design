@@ -14,16 +14,15 @@ venv/
 .env.*
 !.env.example
 
-# Runtime market data and outputs
-data/
-runs/
+# Runtime data and immutable experiment outputs
+/data/
+/runs/
 *.sqlite3
 *.db
-
-# Provider payloads/logs
+/provider_payloads/
 *.log
 
-# Editors/OS
+# Editors / OS
 .vscode/
 .idea/
 .DS_Store

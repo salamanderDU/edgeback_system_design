@@ -250,3 +250,4 @@ Completed run artifacts are immutable. Re-running creates a new run ID, even if 
 - `ArtifactRegistry`
 
 Each extension point requires a protocol/abstract base, a deterministic reference implementation, and contract tests.
+

@@ -1,35 +1,33 @@
+from __future__ import annotations
+
 from datetime import date, datetime
 from typing import Protocol
 
+from pydantic import field_validator
+
+from edgeback.domain.common import UTCModel
+
+
+class TradingSession(UTCModel):
+    session_date: date
+    open_utc: datetime
+    close_utc: datetime
+    is_early_close: bool = False
+
+    @field_validator("open_utc", "close_utc")
+    @classmethod
+    def timestamp_is_utc(cls, value: datetime) -> datetime:
+        return cls.ensure_aware_utc(value)
+
 
 class TradingCalendar(Protocol):
-    """
-    Protocol defining how EdgeBack accesses calendar info.
-    Must return timezone-aware UTC datetimes.
-    """
+    calendar_id: str
+    timezone: str
 
-    @property
-    def name(self) -> str:
-        """Standard calendar identifier, e.g. 'XNYS'"""
-        ...
+    def is_session(self, session_date: date) -> bool: ...
 
-    @property
-    def timezone(self) -> str:
-        """The canonical timezone name for the exchange, e.g., 'America/New_York'"""
-        ...
+    def session(self, session_date: date) -> TradingSession: ...
 
-    def is_session(self, dt_date: date) -> bool:
-        """Returns True if the given date is a trading session."""
-        ...
+    def sessions(self, start: date, end: date) -> tuple[TradingSession, ...]: ...
 
-    def session_open(self, dt_date: date) -> datetime:
-        """Returns the regular session open time in UTC."""
-        ...
-
-    def session_close(self, dt_date: date) -> datetime:
-        """Returns the regular session close time in UTC. Accounts for early closes."""
-        ...
-
-    def is_early_close(self, dt_date: date) -> bool:
-        """Returns True if the given session date has an early close."""
-        ...
+    def expected_bar_starts(self, session_date: date, interval_seconds: int) -> tuple[datetime, ...]: ...

@@ -1,36 +1,23 @@
-"""EdgeBack run artifacts.
-
-T500 canonical result tables (deterministic Parquet builders from engine
-results). The atomic run writer (T520), SQLite registry (T530), and HTML
-report (T540) are added on top of these builders in later tasks.
-"""
-
+from edgeback.artifacts.registry import RunRecord, RunRegistry
+from edgeback.artifacts.reproducibility import build_run_metadata, logical_run_identity
+from edgeback.artifacts.verification import verify_run_directory
+from edgeback.artifacts.writer import RunArtifactWriter
 from edgeback.artifacts.tables import (
-    ClosedTrade,
-    RunResultTables,
-    build_decisions_frame,
-    build_equity_frame,
-    build_fills_frame,
-    build_intents_frame,
-    build_order_events_frame,
-    build_orders_frame,
-    build_trades_frame,
-    build_warnings_frame,
-    trades_from_fills,
-    write_run_tables,
+    TABLE_COLUMNS,
+    arrow_schema_for_table,
+    canonical_result_tables,
+    validate_table_linkage,
 )
 
 __all__ = [
-    "ClosedTrade",
-    "RunResultTables",
-    "build_decisions_frame",
-    "build_equity_frame",
-    "build_fills_frame",
-    "build_intents_frame",
-    "build_order_events_frame",
-    "build_orders_frame",
-    "build_trades_frame",
-    "build_warnings_frame",
-    "trades_from_fills",
-    "write_run_tables",
+    "RunArtifactWriter",
+    "RunRecord",
+    "RunRegistry",
+    "TABLE_COLUMNS",
+    "arrow_schema_for_table",
+    "build_run_metadata",
+    "canonical_result_tables",
+    "logical_run_identity",
+    "validate_table_linkage",
+    "verify_run_directory",
 ]

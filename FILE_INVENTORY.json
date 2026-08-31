@@ -1,137 +1,727 @@
 [
   {
     "path": ".env.example",
-    "bytes": 187,
+    "bytes": 191,
     "lines": 4
   },
   {
+    "path": ".github/workflows/ci.yml",
+    "bytes": 561,
+    "lines": 24
+  },
+  {
+    "path": ".gitignore",
+    "bytes": 344,
+    "lines": 34
+  },
+  {
+    "path": "ACCEPTANCE_REPORT.md",
+    "bytes": 3748,
+    "lines": 70
+  },
+  {
     "path": "AGENTS.md",
-    "bytes": 5939,
-    "lines": 107
+    "bytes": 5940,
+    "lines": 108
   },
   {
     "path": "AI_CLI_PROMPT.txt",
-    "bytes": 1814,
-    "lines": 27
+    "bytes": 1816,
+    "lines": 25
+  },
+  {
+    "path": "CHANGELOG.md",
+    "bytes": 856,
+    "lines": 15
   },
   {
     "path": "DECISIONS.md",
-    "bytes": 4891,
-    "lines": 106
+    "bytes": 8728,
+    "lines": 172
   },
   {
     "path": "EDGE_BACK_SYSTEM_DESIGN_COMBINED.md",
-    "bytes": 115432,
+    "bytes": 118396,
     "lines": 2964
   },
   {
+    "path": "LICENSE",
+    "bytes": 1078,
+    "lines": 21
+  },
+  {
+    "path": "MANIFEST.in",
+    "bytes": 399,
+    "lines": 9
+  },
+  {
     "path": "PROJECT_MANIFEST.yaml",
-    "bytes": 2724,
-    "lines": 80
+    "bytes": 2870,
+    "lines": 85
   },
   {
     "path": "README.md",
-    "bytes": 6470,
-    "lines": 74
+    "bytes": 5036,
+    "lines": 107
+  },
+  {
+    "path": "RELEASE_CHECKLIST.md",
+    "bytes": 1232,
+    "lines": 20
   },
   {
     "path": "STATUS.md",
-    "bytes": 2652,
-    "lines": 65
+    "bytes": 4652,
+    "lines": 56
   },
   {
     "path": "TASK.md",
-    "bytes": 14756,
-    "lines": 339
+    "bytes": 19856,
+    "lines": 340
+  },
+  {
+    "path": "benchmarks/benchmark_engine.py",
+    "bytes": 1576,
+    "lines": 49
   },
   {
     "path": "configs/example_backtest.yaml",
-    "bytes": 2341,
-    "lines": 96
+    "bytes": 2342,
+    "lines": 97
   },
   {
     "path": "configs/example_sweep.yaml",
-    "bytes": 1433,
-    "lines": 50
+    "bytes": 1434,
+    "lines": 51
+  },
+  {
+    "path": "configs/local_import.yaml",
+    "bytes": 1805,
+    "lines": 63
   },
   {
     "path": "docs/01_PRODUCT_REQUIREMENTS.md",
-    "bytes": 9157,
-    "lines": 197
+    "bytes": 9158,
+    "lines": 198
   },
   {
     "path": "docs/02_ARCHITECTURE.md",
-    "bytes": 9574,
-    "lines": 252
+    "bytes": 9575,
+    "lines": 253
   },
   {
     "path": "docs/03_DATA_LAYER.md",
-    "bytes": 8388,
-    "lines": 192
+    "bytes": 8389,
+    "lines": 193
   },
   {
     "path": "docs/04_BACKTEST_ENGINE.md",
-    "bytes": 8730,
-    "lines": 252
+    "bytes": 8731,
+    "lines": 253
   },
   {
     "path": "docs/05_STRATEGY_PLUGIN_SPEC.md",
-    "bytes": 6786,
-    "lines": 190
+    "bytes": 6787,
+    "lines": 191
   },
   {
     "path": "docs/06_EDGE_RESEARCH_PROTOCOL.md",
-    "bytes": 6655,
-    "lines": 173
+    "bytes": 6656,
+    "lines": 174
   },
   {
     "path": "docs/07_CLI_CONFIG_AND_ARTIFACTS.md",
-    "bytes": 6387,
-    "lines": 222
+    "bytes": 6388,
+    "lines": 223
   },
   {
     "path": "docs/08_TESTING_AND_ACCEPTANCE.md",
-    "bytes": 5476,
-    "lines": 162
+    "bytes": 5477,
+    "lines": 163
   },
   {
     "path": "docs/09_FREE_DATA_SOURCES.md",
-    "bytes": 4613,
-    "lines": 72
+    "bytes": 4614,
+    "lines": 73
+  },
+  {
+    "path": "docs/10_USER_GUIDE.md",
+    "bytes": 2499,
+    "lines": 49
+  },
+  {
+    "path": "docs/11_STRATEGY_AUTHORING.md",
+    "bytes": 2253,
+    "lines": 49
+  },
+  {
+    "path": "docs/12_PROVIDER_AUTHORING.md",
+    "bytes": 1226,
+    "lines": 17
+  },
+  {
+    "path": "docs/13_ARTIFACTS_AND_RESEARCH.md",
+    "bytes": 1896,
+    "lines": 32
+  },
+  {
+    "path": "docs/14_TROUBLESHOOTING.md",
+    "bytes": 1741,
+    "lines": 29
+  },
+  {
+    "path": "pyproject.toml",
+    "bytes": 1564,
+    "lines": 73
   },
   {
     "path": "schemas/bar.schema.json",
-    "bytes": 2145,
-    "lines": 116
+    "bytes": 1586,
+    "lines": 33
   },
   {
     "path": "schemas/run_metadata.schema.json",
-    "bytes": 2908,
-    "lines": 164
+    "bytes": 2045,
+    "lines": 51
   },
   {
-    "path": "strategy_specs/README.md",
-    "bytes": 816,
-    "lines": 26
+    "path": "src/edgeback/__init__.py",
+    "bytes": 90,
+    "lines": 5
   },
   {
-    "path": "strategy_specs/gap_momentum.yaml",
-    "bytes": 2270,
-    "lines": 55
+    "path": "src/edgeback/__main__.py",
+    "bytes": 36,
+    "lines": 3
   },
   {
-    "path": "strategy_specs/opening_range_breakout.yaml",
-    "bytes": 4646,
+    "path": "src/edgeback/artifacts/__init__.py",
+    "bytes": 688,
+    "lines": 23
+  },
+  {
+    "path": "src/edgeback/artifacts/registry.py",
+    "bytes": 5898,
+    "lines": 149
+  },
+  {
+    "path": "src/edgeback/artifacts/reproducibility.py",
+    "bytes": 3746,
+    "lines": 104
+  },
+  {
+    "path": "src/edgeback/artifacts/schemas.py",
+    "bytes": 1416,
+    "lines": 54
+  },
+  {
+    "path": "src/edgeback/artifacts/tables.py",
+    "bytes": 13860,
+    "lines": 340
+  },
+  {
+    "path": "src/edgeback/artifacts/verification.py",
+    "bytes": 2025,
+    "lines": 60
+  },
+  {
+    "path": "src/edgeback/artifacts/writer.py",
+    "bytes": 9335,
+    "lines": 198
+  },
+  {
+    "path": "src/edgeback/calendar/__init__.py",
+    "bytes": 186,
+    "lines": 4
+  },
+  {
+    "path": "src/edgeback/calendar/interfaces.py",
+    "bytes": 876,
+    "lines": 33
+  },
+  {
+    "path": "src/edgeback/calendar/xnys.py",
+    "bytes": 2625,
+    "lines": 67
+  },
+  {
+    "path": "src/edgeback/cli.py",
+    "bytes": 15356,
+    "lines": 379
+  },
+  {
+    "path": "src/edgeback/config/__init__.py",
+    "bytes": 398,
+    "lines": 13
+  },
+  {
+    "path": "src/edgeback/config/hashing.py",
+    "bytes": 480,
+    "lines": 16
+  },
+  {
+    "path": "src/edgeback/config/loader.py",
+    "bytes": 4071,
+    "lines": 107
+  },
+  {
+    "path": "src/edgeback/config/models.py",
+    "bytes": 11739,
+    "lines": 314
+  },
+  {
+    "path": "src/edgeback/data/__init__.py",
+    "bytes": 768,
+    "lines": 22
+  },
+  {
+    "path": "src/edgeback/data/fixtures.py",
+    "bytes": 4290,
+    "lines": 116
+  },
+  {
+    "path": "src/edgeback/data/ingestion.py",
+    "bytes": 4814,
+    "lines": 114
+  },
+  {
+    "path": "src/edgeback/data/manifest.py",
+    "bytes": 1662,
+    "lines": 58
+  },
+  {
+    "path": "src/edgeback/data/normalization.py",
+    "bytes": 4507,
+    "lines": 110
+  },
+  {
+    "path": "src/edgeback/data/providers/__init__.py",
+    "bytes": 881,
+    "lines": 32
+  },
+  {
+    "path": "src/edgeback/data/providers/alpaca_provider.py",
+    "bytes": 6219,
     "lines": 153
   },
   {
+    "path": "src/edgeback/data/providers/interfaces.py",
+    "bytes": 1680,
+    "lines": 62
+  },
+  {
+    "path": "src/edgeback/data/providers/local_file_provider.py",
+    "bytes": 2752,
+    "lines": 80
+  },
+  {
+    "path": "src/edgeback/data/providers/yfinance_provider.py",
+    "bytes": 5445,
+    "lines": 135
+  },
+  {
+    "path": "src/edgeback/data/repository.py",
+    "bytes": 10296,
+    "lines": 229
+  },
+  {
+    "path": "src/edgeback/data/resampling.py",
+    "bytes": 4232,
+    "lines": 84
+  },
+  {
+    "path": "src/edgeback/data/schema.py",
+    "bytes": 3370,
+    "lines": 90
+  },
+  {
+    "path": "src/edgeback/data/table_io.py",
+    "bytes": 1814,
+    "lines": 54
+  },
+  {
+    "path": "src/edgeback/data/validation.py",
+    "bytes": 11267,
+    "lines": 306
+  },
+  {
+    "path": "src/edgeback/domain/__init__.py",
+    "bytes": 916,
+    "lines": 42
+  },
+  {
+    "path": "src/edgeback/domain/bars.py",
+    "bytes": 2444,
+    "lines": 70
+  },
+  {
+    "path": "src/edgeback/domain/common.py",
+    "bytes": 750,
+    "lines": 25
+  },
+  {
+    "path": "src/edgeback/domain/enums.py",
+    "bytes": 1188,
+    "lines": 68
+  },
+  {
+    "path": "src/edgeback/domain/events.py",
+    "bytes": 976,
+    "lines": 39
+  },
+  {
+    "path": "src/edgeback/domain/fills.py",
+    "bytes": 1388,
+    "lines": 45
+  },
+  {
+    "path": "src/edgeback/domain/ids.py",
+    "bytes": 807,
+    "lines": 37
+  },
+  {
+    "path": "src/edgeback/domain/orders.py",
+    "bytes": 4907,
+    "lines": 122
+  },
+  {
+    "path": "src/edgeback/domain/positions.py",
+    "bytes": 1250,
+    "lines": 47
+  },
+  {
+    "path": "src/edgeback/domain/trades.py",
+    "bytes": 1129,
+    "lines": 40
+  },
+  {
+    "path": "src/edgeback/engine/__init__.py",
+    "bytes": 175,
+    "lines": 4
+  },
+  {
+    "path": "src/edgeback/engine/event_loop.py",
+    "bytes": 20482,
+    "lines": 443
+  },
+  {
+    "path": "src/edgeback/engine/state.py",
+    "bytes": 1149,
+    "lines": 35
+  },
+  {
+    "path": "src/edgeback/errors.py",
+    "bytes": 1080,
+    "lines": 50
+  },
+  {
+    "path": "src/edgeback/execution/__init__.py",
+    "bytes": 225,
+    "lines": 4
+  },
+  {
+    "path": "src/edgeback/execution/broker.py",
+    "bytes": 19335,
+    "lines": 474
+  },
+  {
+    "path": "src/edgeback/execution/costs.py",
+    "bytes": 3804,
+    "lines": 101
+  },
+  {
+    "path": "src/edgeback/features/__init__.py",
+    "bytes": 311,
+    "lines": 17
+  },
+  {
+    "path": "src/edgeback/features/indicators.py",
+    "bytes": 2057,
+    "lines": 62
+  },
+  {
+    "path": "src/edgeback/features/range.py",
+    "bytes": 660,
+    "lines": 22
+  },
+  {
+    "path": "src/edgeback/logging.py",
+    "bytes": 1518,
+    "lines": 51
+  },
+  {
+    "path": "src/edgeback/metrics/__init__.py",
+    "bytes": 132,
+    "lines": 3
+  },
+  {
+    "path": "src/edgeback/metrics/performance.py",
+    "bytes": 9098,
+    "lines": 206
+  },
+  {
+    "path": "src/edgeback/orchestrator.py",
+    "bytes": 5245,
+    "lines": 128
+  },
+  {
+    "path": "src/edgeback/portfolio/__init__.py",
+    "bytes": 85,
+    "lines": 3
+  },
+  {
+    "path": "src/edgeback/portfolio/ledger.py",
+    "bytes": 9461,
+    "lines": 218
+  },
+  {
+    "path": "src/edgeback/reporting/__init__.py",
+    "bytes": 89,
+    "lines": 3
+  },
+  {
+    "path": "src/edgeback/reporting/html.py",
+    "bytes": 9702,
+    "lines": 167
+  },
+  {
+    "path": "src/edgeback/research/__init__.py",
+    "bytes": 628,
+    "lines": 21
+  },
+  {
+    "path": "src/edgeback/research/bootstrap.py",
+    "bytes": 1406,
+    "lines": 44
+  },
+  {
+    "path": "src/edgeback/research/gates.py",
+    "bytes": 2949,
+    "lines": 70
+  },
+  {
+    "path": "src/edgeback/research/robustness.py",
+    "bytes": 1796,
+    "lines": 41
+  },
+  {
+    "path": "src/edgeback/research/runner.py",
+    "bytes": 19536,
+    "lines": 441
+  },
+  {
+    "path": "src/edgeback/research/splits.py",
+    "bytes": 3035,
+    "lines": 83
+  },
+  {
+    "path": "src/edgeback/risk/__init__.py",
+    "bytes": 157,
+    "lines": 3
+  },
+  {
+    "path": "src/edgeback/risk/manager.py",
+    "bytes": 15229,
+    "lines": 360
+  },
+  {
+    "path": "src/edgeback/strategy/__init__.py",
+    "bytes": 689,
+    "lines": 25
+  },
+  {
+    "path": "src/edgeback/strategy/base.py",
+    "bytes": 1473,
+    "lines": 49
+  },
+  {
+    "path": "src/edgeback/strategy/context.py",
+    "bytes": 4280,
+    "lines": 136
+  },
+  {
+    "path": "src/edgeback/strategy/models.py",
+    "bytes": 1031,
+    "lines": 28
+  },
+  {
+    "path": "src/edgeback/strategy/registry.py",
+    "bytes": 2077,
+    "lines": 67
+  },
+  {
+    "path": "src/edgeback/strategy/services.py",
+    "bytes": 768,
+    "lines": 25
+  },
+  {
+    "path": "src/edgeback/utils.py",
+    "bytes": 2759,
+    "lines": 100
+  },
+  {
+    "path": "strategies/__init__.py",
+    "bytes": 47,
+    "lines": 1
+  },
+  {
+    "path": "strategies/gap_momentum.py",
+    "bytes": 6925,
+    "lines": 164
+  },
+  {
+    "path": "strategies/opening_range_breakout.py",
+    "bytes": 9600,
+    "lines": 235
+  },
+  {
+    "path": "strategies/vwap_mean_reversion.py",
+    "bytes": 5596,
+    "lines": 141
+  },
+  {
+    "path": "strategy_specs/README.md",
+    "bytes": 817,
+    "lines": 27
+  },
+  {
+    "path": "strategy_specs/gap_momentum.yaml",
+    "bytes": 2271,
+    "lines": 56
+  },
+  {
+    "path": "strategy_specs/opening_range_breakout.yaml",
+    "bytes": 4647,
+    "lines": 154
+  },
+  {
     "path": "strategy_specs/vwap_mean_reversion.yaml",
-    "bytes": 2267,
-    "lines": 57
+    "bytes": 2268,
+    "lines": 58
   },
   {
     "path": "templates/gitignore.template",
-    "bytes": 286,
-    "lines": 30
+    "bytes": 298,
+    "lines": 29
+  },
+  {
+    "path": "templates/strategy_template.py",
+    "bytes": 1344,
+    "lines": 44
+  },
+  {
+    "path": "tests/__init__.py",
+    "bytes": 0,
+    "lines": 0
+  },
+  {
+    "path": "tests/fixtures/__init__.py",
+    "bytes": 0,
+    "lines": 0
+  },
+  {
+    "path": "tests/integration/__init__.py",
+    "bytes": 0,
+    "lines": 0
+  },
+  {
+    "path": "tests/integration/test_cli.py",
+    "bytes": 2903,
+    "lines": 88
+  },
+  {
+    "path": "tests/integration/test_engine.py",
+    "bytes": 3113,
+    "lines": 69
+  },
+  {
+    "path": "tests/network/__init__.py",
+    "bytes": 0,
+    "lines": 0
+  },
+  {
+    "path": "tests/network/test_provider_smoke.py",
+    "bytes": 1644,
+    "lines": 55
+  },
+  {
+    "path": "tests/test_import.py",
+    "bytes": 100,
+    "lines": 4
+  },
+  {
+    "path": "tests/unit/__init__.py",
+    "bytes": 0,
+    "lines": 0
+  },
+  {
+    "path": "tests/unit/test_artifacts_metrics.py",
+    "bytes": 7989,
+    "lines": 193
+  },
+  {
+    "path": "tests/unit/test_broker.py",
+    "bytes": 8395,
+    "lines": 234
+  },
+  {
+    "path": "tests/unit/test_calendar.py",
+    "bytes": 873,
+    "lines": 24
+  },
+  {
+    "path": "tests/unit/test_config.py",
+    "bytes": 2884,
+    "lines": 73
+  },
+  {
+    "path": "tests/unit/test_costs_portfolio.py",
+    "bytes": 3811,
+    "lines": 123
+  },
+  {
+    "path": "tests/unit/test_data.py",
+    "bytes": 2853,
+    "lines": 75
+  },
+  {
+    "path": "tests/unit/test_domain.py",
+    "bytes": 2132,
+    "lines": 70
+  },
+  {
+    "path": "tests/unit/test_features_strategy.py",
+    "bytes": 9731,
+    "lines": 294
+  },
+  {
+    "path": "tests/unit/test_json_schemas.py",
+    "bytes": 1439,
+    "lines": 34
+  },
+  {
+    "path": "tests/unit/test_local_provider.py",
+    "bytes": 1327,
+    "lines": 46
+  },
+  {
+    "path": "tests/unit/test_logging.py",
+    "bytes": 727,
+    "lines": 23
+  },
+  {
+    "path": "tests/unit/test_providers.py",
+    "bytes": 3832,
+    "lines": 102
+  },
+  {
+    "path": "tests/unit/test_resampling.py",
+    "bytes": 1664,
+    "lines": 49
+  },
+  {
+    "path": "tests/unit/test_research.py",
+    "bytes": 7753,
+    "lines": 187
   }
 ]

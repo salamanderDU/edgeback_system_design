@@ -250,3 +250,4 @@ The actual implementation may optimize iteration but must preserve this observab
 - daily/session P&L;
 - risk events and lockouts;
 - warnings for ambiguous bars, data quality, short assumptions, and forced exits.
+

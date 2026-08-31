@@ -1,31 +1,25 @@
 from edgeback.strategy.base import Strategy
 from edgeback.strategy.context import StrategyContext
-from edgeback.strategy.models import StrategyDetail, StrategyMetadata, StrategySummary
+from edgeback.strategy.models import StrategyMetadata, StrategyParameters
 from edgeback.strategy.registry import (
-    StrategyRegistryError,
-    clear_registry,
+    create_strategy,
     get_strategy_class,
-    list_strategies,
+    load_builtin_strategies,
     register_strategy,
+    strategy_classes,
 )
-from edgeback.strategy.services import (
-    describe_strategy_service,
-    discover_strategies,
-    list_strategies_service,
-)
+from edgeback.strategy.services import describe_strategy, list_strategies
 
 __all__ = [
     "Strategy",
     "StrategyContext",
     "StrategyMetadata",
-    "StrategySummary",
-    "StrategyDetail",
-    "StrategyRegistryError",
-    "clear_registry",
+    "StrategyParameters",
+    "create_strategy",
+    "describe_strategy",
     "get_strategy_class",
     "list_strategies",
+    "load_builtin_strategies",
     "register_strategy",
-    "discover_strategies",
-    "list_strategies_service",
-    "describe_strategy_service",
+    "strategy_classes",
 ]

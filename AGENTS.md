@@ -105,3 +105,4 @@ A handoff is safe only when:
 - secrets are absent;
 - generated data and run artifacts are not accidentally staged;
 - another agent can continue without asking the user to repeat project requirements.
+

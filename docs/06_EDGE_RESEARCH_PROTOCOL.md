@@ -171,3 +171,4 @@ Never use `PROVEN`, `GUARANTEED`, or equivalent language.
 ## 12. Seed hypothesis usage
 
 The included ORB, VWAP mean-reversion, and gap-momentum specifications are deliberately ordinary. Their purpose is to exercise the research pipeline and provide falsifiable starting hypotheses. They must not be presented as recommendations to trade.
+

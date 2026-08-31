@@ -160,3 +160,4 @@ Using a sufficiently long canonical dataset when available:
 ## 12. Performance benchmarking
 
 Add non-CI benchmarks for event throughput, memory, artifact size, and report time. Optimization may not change golden outputs. Any vectorized optimization must pass the same no-look-ahead and fill-semantics tests as the reference implementation.
+

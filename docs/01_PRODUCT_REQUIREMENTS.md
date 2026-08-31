@@ -195,3 +195,4 @@ pytest
 ```
 
 The generated run must contain a resolved config, data manifest, deterministic trade results, cost-inclusive metrics, warnings, and an HTML report. A second identical run must produce the same canonical outputs except for run ID and timestamps.
+

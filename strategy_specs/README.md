@@ -24,3 +24,4 @@ Required fields:
 - known biases/limitations
 
 When rules change in a way that can alter signals, increment the strategy version. Preserve old experiment identity. A post-hoc filter discovered from final-test results requires a new version and new unseen data.
+

@@ -151,3 +151,4 @@ known_limitations:
   - "Synthetic spread/slippage replaces quote data."
   - "Opening auction effects are not modeled."
   - "Free-provider volume may not be consolidated."
+

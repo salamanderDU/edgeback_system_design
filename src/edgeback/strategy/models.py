@@ -1,39 +1,28 @@
+from __future__ import annotations
+
 from typing import Any, Literal
 
-from pydantic import Field
-
-from edgeback.config.models import BaseStrictModel
+from pydantic import BaseModel, ConfigDict, Field
 
 
-class StrategyMetadata(BaseStrictModel):
-    """
-    Metadata for a registered strategy.
-    """
-
-    strategy_id: str
-    version: str
-    name: str = ""
-    description: str = ""
-    scope: Literal["per_symbol", "portfolio"] = "per_symbol"
-    warmup_bars: int = Field(ge=0, default=0)
-    required_fields: tuple[str, ...] = ("open", "high", "low", "close", "volume")
-    research_status: Literal["hypothesis", "experimental", "validated_for_dataset"] = "hypothesis"
-    known_limitations: list[str] = Field(default_factory=list)
+class StrategyParameters(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True, validate_default=True)
 
 
-class StrategySummary(BaseStrictModel):
+class StrategyMetadata(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
     strategy_id: str
     version: str
     name: str
     description: str
-    scope: str
-    research_status: str
-    warmup_bars: int
-
-
-class StrategyDetail(BaseStrictModel):
-    strategy_id: str
-    version: str
-    metadata: StrategyMetadata
-    params_schema: dict[str, Any]
-    default_params: dict[str, Any] = Field(default_factory=dict)
+    scope: Literal["per_symbol", "portfolio"] = "per_symbol"
+    markets: tuple[str, ...] = ("US_EQUITY", "US_ETF")
+    timeframes: tuple[str, ...] = ("1m", "5m", "15m")
+    directions: tuple[str, ...] = ("long", "short")
+    required_fields: tuple[str, ...] = ("open", "high", "low", "close", "volume")
+    warmup_bars: int = Field(default=0, ge=0)
+    previous_sessions_required: int = Field(default=0, ge=0)
+    research_status: Literal["hypothesis", "experimental", "validated_for_dataset"] = "hypothesis"
+    known_limitations: tuple[str, ...] = ()
+    parameter_schema: dict[str, Any] = Field(default_factory=dict)

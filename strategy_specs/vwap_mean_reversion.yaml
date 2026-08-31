@@ -55,3 +55,4 @@ known_limitations:
   - "Trend-regime proxy is simple and may not generalize."
   - "Provider volume coverage materially affects VWAP."
   - "Quote spread widens during volatile moves but is synthetic in MVP."
+
