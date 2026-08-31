@@ -55,7 +55,9 @@ class EngineConfig(BaseStrictModel):
     initial_cash_usd: float = Field(gt=0.0)
     signal_time: Literal["bar_close"] = "bar_close"
     market_fill_timing: Literal["next_bar_open"] = "next_bar_open"
-    same_bar_bracket_policy: Literal["stop_first", "target_first"] = "stop_first"
+    same_bar_bracket_policy: Literal[
+        "stop_first", "target_first", "nearest_to_open", "reject_ambiguous_bar"
+    ] = "stop_first"
     force_flat_at_session_end: bool = True
     entry_allocation: str = "priority_then_symbol"
     fractional_shares: bool = False
@@ -63,19 +65,41 @@ class EngineConfig(BaseStrictModel):
 
 
 class SpreadConfig(BaseStrictModel):
-    model: str
+    model: Literal["fixed_bps"] = "fixed_bps"
     full_spread_bps: float = Field(ge=0.0)
 
 
 class SlippageConfig(BaseStrictModel):
-    model: str
+    model: Literal["fixed_bps"] = "fixed_bps"
     bps_per_side: float = Field(ge=0.0)
 
 
 class CommissionConfig(BaseStrictModel):
-    model: str
-    usd_per_share: float = Field(ge=0.0)
-    minimum_usd_per_order: float = Field(ge=0.0)
+    """
+    Commission model selection (docs/04 §6).
+
+    Models:
+    - ``zero`` — no commission.
+    - ``fixed_per_order`` — requires ``usd_per_order``.
+    - ``per_share`` — requires ``usd_per_share``, optional ``minimum_usd_per_order``.
+    - ``bps`` — requires ``bps_of_notional``.
+    """
+
+    model: Literal["zero", "fixed_per_order", "per_share", "bps"] = "zero"
+    usd_per_order: float | None = Field(default=None, ge=0.0)
+    usd_per_share: float | None = Field(default=None, ge=0.0)
+    minimum_usd_per_order: float | None = Field(default=None, ge=0.0)
+    bps_of_notional: float | None = Field(default=None, ge=0.0)
+
+    @model_validator(mode="after")
+    def validate_commission_params(self: "CommissionConfig") -> "CommissionConfig":
+        if self.model == "fixed_per_order" and self.usd_per_order is None:
+            raise ValueError("fixed_per_order commission requires usd_per_order")
+        if self.model == "per_share" and self.usd_per_share is None:
+            raise ValueError("per_share commission requires usd_per_share")
+        if self.model == "bps" and self.bps_of_notional is None:
+            raise ValueError("bps commission requires bps_of_notional")
+        return self
 
 
 class VolumeParticipationConfig(BaseStrictModel):
@@ -91,9 +115,35 @@ class ExecutionConfig(BaseStrictModel):
 
 
 class RiskSizingConfig(BaseStrictModel):
-    model: str
+    """
+    Position-sizing model selection (docs/04 §8, FR-007).
+
+    Models:
+    - ``risk_per_trade`` — requires ``risk_per_trade_pct_of_equity``.
+    - ``fixed_shares`` — requires ``fixed_shares``.
+    - ``fixed_notional`` — requires ``fixed_notional_usd``.
+    - ``percent_equity`` — requires ``percent_equity_pct``.
+    """
+
+    model: Literal["risk_per_trade", "fixed_shares", "fixed_notional", "percent_equity"] = (
+        "risk_per_trade"
+    )
     risk_per_trade_pct_of_equity: float | None = Field(default=None, gt=0.0, le=100.0)
     fixed_shares: int | None = Field(default=None, gt=0)
+    fixed_notional_usd: float | None = Field(default=None, gt=0.0)
+    percent_equity_pct: float | None = Field(default=None, gt=0.0, le=100.0)
+
+    @model_validator(mode="after")
+    def validate_sizing_params(self: "RiskSizingConfig") -> "RiskSizingConfig":
+        if self.model == "risk_per_trade" and self.risk_per_trade_pct_of_equity is None:
+            raise ValueError("risk_per_trade sizing requires risk_per_trade_pct_of_equity")
+        if self.model == "fixed_shares" and self.fixed_shares is None:
+            raise ValueError("fixed_shares sizing requires fixed_shares")
+        if self.model == "fixed_notional" and self.fixed_notional_usd is None:
+            raise ValueError("fixed_notional sizing requires fixed_notional_usd")
+        if self.model == "percent_equity" and self.percent_equity_pct is None:
+            raise ValueError("percent_equity sizing requires percent_equity_pct")
+        return self
 
 
 class RiskConfig(BaseStrictModel):

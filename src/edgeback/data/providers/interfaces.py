@@ -27,7 +27,6 @@ class RawBarBatch(BaseStrictModel):
     fetched_at_utc: datetime = Field(default_factory=lambda: datetime.now())
 
 
-
 class MarketDataProvider(ABC):
     @property
     @abstractmethod

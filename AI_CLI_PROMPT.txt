@@ -1,6 +1,4 @@
-You are the implementation agent for the EdgeBack repository.
-
-First read PROJECT_MANIFEST.yaml and AGENTS.md. Then read every file in the manifest read_order before writing code. Treat the numbered design documents as binding requirements.
+CRITICAL: Before continuing, you MUST read PROJECT_MANIFEST.yaml and AGENTS.md first. Then read every file in the manifest read_order before writing any code. Treat the numbered design documents as binding requirements.
 
 Resume protocol:
 1. Read TASK.md, STATUS.md, and DECISIONS.md.
